@@ -54,14 +54,44 @@
         <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit.version}</version>
         <scope>test</scope>
-      </dependency>  </dependencies>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>25-ea+12</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>25-ea+12</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>25-ea+12</version>
+      </dependency>
+
+<!--       Thêm thư viện jar vào project-->
+      <dependency>
+          <groupId>local</groupId>
+          <artifactId>my-lib</artifactId>
+          <version>1.0.0</version>
+          <scope>system</scope>
+          <systemPath>${project.basedir}/libs/HHKT_Station.jar</systemPath>
+      </dependency>
+
+  </dependencies>
 
   <build>
     <plugins>
-<plugin>
+        <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.4.0</version>
-      </plugin>    </plugins>
+      </plugin>
+    </plugins>
   </build>
 </project>

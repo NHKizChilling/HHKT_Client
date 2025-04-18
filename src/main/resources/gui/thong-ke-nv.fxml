@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="750.0" prefWidth="1385.0" styleClass="parent" stylesheets="@thongKe.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ThongKeNVController">
+   <top>
+      <AnchorPane prefWidth="250.0" style="-fx-background-color: #f3f3f3;" BorderPane.alignment="CENTER">
+         <children>
+            <VBox prefWidth="1305.0" styleClass="pane" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0">
+               <children>
+                  <HBox prefWidth="1303.0">
+                     <children>
+                        <Label text="THỐNG KÊ NHÂN VIÊN" textFill="#2b49b3">
+                           <padding>
+                              <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                           </padding>
+                           <font>
+                              <Font name="Calibri Bold" size="24.0" />
+                           </font>
+                        </Label>
+                        <Separator orientation="VERTICAL">
+                           <HBox.margin>
+                              <Insets left="75.0" top="10.0" />
+                           </HBox.margin>
+                        </Separator>
+                        <Label layoutX="10.0" layoutY="10.0" text="Thống kê theo" textFill="#4c4c4e">
+                           <padding>
+                              <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                           </padding>
+                           <font>
+                              <Font name="Calibri Bold" size="18.0" />
+                           </font>
+                        </Label>
+                        <ComboBox fx:id="cb_thongKe" prefHeight="30.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
+                           <HBox.margin>
+                              <Insets bottom="15.0" left="15.0" right="15.0" top="5.0" />
+                           </HBox.margin>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </ComboBox>
+                        <ComboBox fx:id="cb_thang" layoutX="412.0" layoutY="10.0" prefHeight="30.0" prefWidth="100.0" promptText="Tháng">
+                           <HBox.margin>
+                              <Insets left="365.0" top="5.0" />
+                           </HBox.margin>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </ComboBox>
+                        <ComboBox fx:id="cb_nam" layoutX="562.0" layoutY="10.0" prefHeight="30.0" prefWidth="100.0" promptText="Năm">
+                           <HBox.margin>
+                              <Insets left="20.0" top="5.0" />
+                           </HBox.margin>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </ComboBox>
+                        <Button fx:id="btn_search" mnemonicParsing="false">
+                           <graphic>
+                              <FontAwesomeIcon fill="WHITE" glyphName="SEARCH">
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor></FontAwesomeIcon>
+                           </graphic>
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                           <HBox.margin>
+                              <Insets left="20.0" top="5.0" />
+                           </HBox.margin>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </Button>
+                        <FontAwesomeIcon fill="WHITE" glyphName="SEARCH" />
+                     </children>
+                  </HBox>
+                  <HBox VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <children>
+                        <VBox>
+                           <children>
+                              <AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="160.0" prefWidth="300.0" styleClass="banVe_card">
+                                 <VBox.margin>
+                                    <Insets left="15.0" top="50.0" />
+                                 </VBox.margin>
+                                 <children>
+                                    <Label layoutX="10.0" layoutY="14.0" text="Nhân viên đang hoạt động:" textFill="WHITE" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="14.0">
+                                       <padding>
+                                          <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                       </padding>
+                                       <font>
+                                          <Font name="Calibri Bold" size="20.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="lbl_soNv" layoutX="30.0" layoutY="67.0" text="100 nhân viên" textFill="WHITE">
+                                       <padding>
+                                          <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                       </padding>
+                                       <font>
+                                          <Font name="Calibri Bold" size="36.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </AnchorPane>
+                           </children>
+                        </VBox>
+                        <Separator orientation="VERTICAL" prefHeight="200.0">
+                           <HBox.margin>
+                              <Insets left="15.0" right="15.0" />
+                           </HBox.margin>
+                           <padding>
+                              <Insets bottom="10.0" top="10.0" />
+                           </padding>
+                        </Separator>
+                        <VBox prefWidth="900.0">
+                           <children>
+                              <Label fx:id="lbl_taoBaoCaoNV" alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Tạo báo cáo" textFill="#2b49b3">
+                                 <font>
+                                    <Font name="Calibri Bold" size="15.0" />
+                                 </font>
+                                 <padding>
+                                    <Insets right="15.0" />
+                                 </padding>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
+                              </Label>
+                              <BarChart fx:id="barChart_top5nv" prefHeight="300.0">
+                                 <xAxis>
+                                    <CategoryAxis side="BOTTOM" />
+                                 </xAxis>
+                                 <yAxis>
+                                    <NumberAxis side="LEFT" />
+                                 </yAxis>
+                              </BarChart>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            <AnchorPane layoutX="40.0" layoutY="388.0" prefHeight="380.0" prefWidth="1305.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="330.0">
+               <children>
+                  <Label layoutX="14.0" layoutY="72.0" text="THỐNG KÊ CHUYẾN TÀU" textFill="#4c4c4e" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="72.0">
+                     <font>
+                        <Font name="Calibri Bold" size="24.0" />
+                     </font>
+                  </Label>
+                  <VBox layoutX="14.0" layoutY="40.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.topAnchor="120.0">
+                     <children>
+                        <AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="160.0" prefWidth="300.0" styleClass="doiVe_card">
+                           <children>
+                              <Label layoutX="10.0" layoutY="14.0" text="Chuyến tàu đang hoạt động:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="14.0">
+                                 <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </padding>
+                                 <font>
+                                    <Font name="Calibri Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="lbl_soChuyenTau" layoutX="19.0" layoutY="67.0" text="100 chuyến tàu">
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <font>
+                                    <Font name="Calibri Bold" size="36.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </AnchorPane>
+                     </children>
+                  </VBox>
+                  <VBox layoutX="330.0" layoutY="13.0" styleClass="pane1" AnchorPane.leftAnchor="334.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
+                     <children>
+                        <Label fx:id="lbl_taoBaoCaoChuyenTau" alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Tạo báo cáo" textFill="#2b49b3">
+                           <font>
+                              <Font name="Calibri Bold" size="15.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets left="10.0" right="15.0" top="10.0" />
+                           </VBox.margin>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </Label>
+                        <BarChart fx:id="barChart_chuyenTau" prefHeight="300.0">
+                          <xAxis>
+                            <CategoryAxis side="BOTTOM" />
+                          </xAxis>
+                          <yAxis>
+                            <NumberAxis side="LEFT" />
+                          </yAxis>
+                        </BarChart>
+                     </children>
+                     <padding>
+                        <Insets right="50.0" />
+                     </padding>
+                  </VBox>
+               </children>
+            </AnchorPane>
+         </children>
+      </AnchorPane>
+   </top>
+</BorderPane>
