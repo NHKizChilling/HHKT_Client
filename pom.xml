@@ -125,7 +125,6 @@
           <artifactId>fontawesomefx</artifactId>
           <version>8.0.8</version>
       </dependency>
-<!--      &lt;!&ndash; https://mvnrepository.com/artifact/com.gluonhq/charm-glisten &ndash;&gt;-->
         <dependency>
             <groupId>com.gluonhq</groupId>
             <artifactId>charm-glisten</artifactId>
