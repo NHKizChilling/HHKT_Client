@@ -10,18 +10,22 @@ import com.itextpdf.text.Font;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.Barcode;
-import dao.*;
+import service.*;
 import entity.*;
 
 import java.awt.*;
+import java.awt.Image;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 /*
  * @description:
@@ -35,11 +39,21 @@ public class PrintPDF {
 
     }
 
+    private KhachHangService khachHangService;
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ctHoaDonService;
+    private LichTrinhService lichTrinhService;
+    private CT_LichTrinhService ctLichTrinhService;
+    private ToaService toaService;
+    private GaService gaService;
+    private LoaiToaService loaiToaService;
+    private ChoNgoiService choNgoiService;
+
     public void inVe(ArrayList<Ve> dsve) throws IOException, DocumentException {
 
         // Tạo một document
         Document document = new Document(new Rectangle(250, 550));
-        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("src/main/resources/pdf/" + "dsve-" + getData.hd.getMaHoaDon() + ".pdf"));
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("src/main/resources/pdf/" + "dsve-" + getData.hd.getMaHD() + ".pdf"));
         document.addLanguage("vi");
         document.open();
         //Cho phép viết tiếng Việt không lỗi mất chữ có dấu
@@ -76,9 +90,149 @@ public class PrintPDF {
             p3.add(new Chunk("Ga đến/To"));
             document.add(p3);
             //Tên ga
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
-            String gaDi = new Ga_DAO().getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
-            String gaDen = new Ga_DAO().getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
+            LichTrinh lt = new LichTrinhService() {
+                @Override
+                public List<LichTrinh> getAll() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public LichTrinh getLichTrinhTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<LichTrinh> getDSLichTrinhTheoTrangThai(boolean b) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1, LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhSauNgayHienTai() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhTheoNgay(LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Long getSoLuongChoConTrong(String s) throws RemoteException {
+                    return 0L;
+                }
+
+                @Override
+                public boolean updateTrangThaiChuyenTau(String s, boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateTrangThaiCT(boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateInfo(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean create(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LichTrinh getOne(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            String gaDi = new GaService() {
+                @Override
+                public List<Ga> getAllGa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ga getGaTheoMaGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ga getGaTheoTenGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public double KhoangCach(String s) throws RemoteException {
+                    return 0;
+                }
+
+                @Override
+                public boolean create(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
+            String gaDen = new GaService() {
+                @Override
+                public List<Ga> getAllGa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ga getGaTheoMaGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ga getGaTheoTenGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public double KhoangCach(String s) throws RemoteException {
+                    return 0;
+                }
+
+                @Override
+                public boolean create(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
             Paragraph p4 = new Paragraph(gaDi.toUpperCase() + "           " + gaDen.toUpperCase(), fontTitle);
             p4.setAlignment(Element.ALIGN_CENTER);
             document.add(p4);
@@ -87,7 +241,7 @@ public class PrintPDF {
             //Tạo para có ngày giờ
             Paragraph p5 = new Paragraph("Tàu/Train: ", fontContent);
             p5.setAlignment(Element.ALIGN_JUSTIFIED);
-            p5.add(new Chunk(lt.getChuyenTau().getSoHieutau(), fontContentB));
+            p5.add(new Chunk(String.valueOf(lt.getSoHieuTau()), fontContentB));
             //tạo margin bottom
             p5.setSpacingAfter(5);
             document.add(p5);
@@ -104,21 +258,151 @@ public class PrintPDF {
             p7.setSpacingAfter(5);
             document.add(p7);
             //Tạo para có Toa
-            ChoNgoi choNgoi = new ChoNgoi_DAO().getChoNgoiTheoMa(ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            Toa toa = new Toa_DAO().getToaTheoID(choNgoi.getToa().getMaToa());
-            Paragraph p8 = new Paragraph("Toa/Coach: " + toa.getSoSTToa() +  "     Chỗ/Seat: " + choNgoi.getSttCho(), fontContent);
+            ChoNgoi choNgoi = new ChoNgoiService() {
+                @Override
+                public List<ChoNgoi> getAllChoNgoi() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoToa(String s, int i) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<ChoNgoi> getDSChoNgoiTheoToa(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<ChoNgoi> getChoNgoiDaDat(LichTrinh lichTrinh) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            Toa toa = new ToaService() {
+                @Override
+                public List<Toa> getAllToa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Toa getToaTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<Toa> getAllToaTheoChuyenTau(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(Toa toa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Toa toa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getToaTheoID(choNgoi.getToa().getMaToa());
+            Paragraph p8 = new Paragraph("Toa/Coach: " + toa.getSttToa() +  "     Chỗ/Seat: " + choNgoi.getSttCho(), fontContent);
             p8.setAlignment(Element.ALIGN_LEFT);
             p8.setSpacingAfter(5);
             document.add(p8);
             //Tạo para có Loại chỗ
-            LoaiToa loaiToa = new LoaiToa_DAO().getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa());
+            LoaiToa loaiToa = new LoaiToaService() {
+                @Override
+                public List<LoaiToa> getAllLoaiToa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(LoaiToa loaiToa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LoaiToa loaiToa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LoaiToa getLoaiToaTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public boolean xoaLoaiToaTheoMa(String s) throws RemoteException {
+                    return false;
+                }
+            }.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa());
             Paragraph p9 = new Paragraph("Loại chỗ/Class: ", fontContent);
             p9.setAlignment(Element.ALIGN_LEFT);
             p9.setSpacingAfter(5);
             p9.add(new Chunk(loaiToa.getTenLoaiToa(),fontContentB));
             document.add(p9);
             //Tạo para có Loại vé
-            LoaiVe loaiVe = new LoaiVe_DAO().getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+            LoaiVe loaiVe = new LoaiVeService() {
+                @Override
+                public List<LoaiVe> getAllLoaiVe() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoTen(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
             Paragraph p10 = new Paragraph("Loại vé/Ticket: ", fontContent);
             p10.setAlignment(Element.ALIGN_LEFT);
             p10.setSpacingAfter(5);
@@ -128,7 +412,7 @@ public class PrintPDF {
             Paragraph p11 = new Paragraph("Họ tên/Name: ", fontContent);
             p11.setAlignment(Element.ALIGN_LEFT);
             p11.setSpacingAfter(5);
-            p11.add(new Chunk(ve.getTenHanhKhach(), fontContentB));
+            p11.add(new Chunk(ve.getTenKH(), fontContentB));
             document.add(p11);
             //Tạo para có Giấy tờ
             Paragraph p12 = new Paragraph("Giấy tờ/Passport: ", fontContent);
@@ -140,7 +424,42 @@ public class PrintPDF {
             Paragraph p13 = new Paragraph("Giá/Price: ", fontContent);
             p13.setAlignment(Element.ALIGN_LEFT);
             p13.setSpacingAfter(5);
-            p13.add(new Chunk(new DecimalFormat("#,### VNĐ").format(new CT_HoaDon_DAO().getCT_HoaDonTheoMaVe(ve.getMaVe()).getGiaVe()), fontContentB));
+            p13.add(new Chunk(new DecimalFormat("#,### VNĐ").format(new CT_HoaDonService() {
+                @Override
+                public List<ChiTietHoaDon> getAllCT_HoaDon() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChiTietHoaDon getCT_HoaDon(String s, String s1) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public ChiTietHoaDon getCT_HoaDonTheoMaVe(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<ChiTietHoaDon> getCT_HoaDon(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                    return false;
+                }
+            }.getCT_HoaDonTheoMaVe(ve.getMaVe()).getGiaVe()), fontContentB));
 
             document.add(p13);
             StringBuilder text = new StringBuilder();
@@ -161,14 +480,14 @@ public class PrintPDF {
 
         try {
             document.close();
-            Desktop.getDesktop().open(new File("src/main/resources/pdf/" + "dsve-" + getData.hd.getMaHoaDon() + ".pdf"));
+            Desktop.getDesktop().open(new File("src/main/resources/pdf/" + "dsve-" + getData.hd.getMaHD() + ".pdf"));
         }catch (Exception e){
             System.out.println("Tạo vé thất bại!");
         }
     }
 
     public void inHoaDon(HoaDon hoaDon) throws IOException, DocumentException {
-        String filename = hoaDon.getMaHoaDon() + ".pdf";
+        String filename = hoaDon.getMaHD() + ".pdf";
 
             // Create a new document
         Document document = new Document(PageSize.A4);
@@ -183,7 +502,7 @@ public class PrintPDF {
         img.scaleAbsolute(50, 50);
         document.add(img);
         //Add no invoice left side
-        Paragraph noInvoice = new Paragraph("Số: " + hoaDon.getMaHoaDon(), new Font(bf, 10, Font.BOLD));
+        Paragraph noInvoice = new Paragraph("Số: " + hoaDon.getMaHD(), new Font(bf, 10, Font.BOLD));
         noInvoice.setAlignment(Element.ALIGN_RIGHT);
         document.add(noInvoice);
         // Define fonts
@@ -209,7 +528,52 @@ public class PrintPDF {
         document.add(new Paragraph("Địa chỉ: Số 12A Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, Thành phố Hồ Chí Minh, Việt Nam", regularFont));
         document.add(new Paragraph(" "));
         // Add buyer info
-        document.add(new Paragraph("\nHọ tên người mua hàng: " + new KhachHang_DAO().getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH()).getTenKH(), boldFont));
+        document.add(new Paragraph("\nHọ tên người mua hàng: " + new KhachHangService() {
+            @Override
+            public List<KhachHang> getAllKhachHang() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public String getAutoGeneratedId() throws RemoteException {
+                return "";
+            }
+
+            @Override
+            public boolean create(KhachHang khachHang) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(KhachHang khachHang) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean updateSoSDT(String s, String s1) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(String s) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public KhachHang getKhachHangTheoMaKH(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public KhachHang getKHTheoCCCD(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public KhachHang getKhachHangTheoSDT(String s) throws RemoteException {
+                return null;
+            }
+        }.getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH()).getTenKH(), boldFont));
         document.add(new Paragraph("Hình thức thanh toán: Tiền mặt", regularFont));
         document.add(new Paragraph(" "));
 
@@ -221,22 +585,317 @@ public class PrintPDF {
 
         // Add headers
         addTableHeader(table, boldFont, "STT", "Mã vé", "Tên dịch vụ", "ĐVT", "Số lượng", "Đơn giá", "Thành tiền chưa có thuế", "Thuế GTGT", "TT có thuế");
-        ArrayList<ChiTietHoaDon> dscthd = new CT_HoaDon_DAO().getCT_HoaDon(hoaDon.getMaHoaDon());
+        ArrayList<ChiTietHoaDon> dscthd = (ArrayList<ChiTietHoaDon>) new CT_HoaDonService() {
+            @Override
+            public List<ChiTietHoaDon> getAllCT_HoaDon() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public ChiTietHoaDon getCT_HoaDon(String s, String s1) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public ChiTietHoaDon getCT_HoaDonTheoMaVe(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public List<ChiTietHoaDon> getCT_HoaDon(String s) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public boolean create(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+        }.getCT_HoaDon(hoaDon.getMaHD());
         NumberFormat df = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));;
         // Add ticket row 1
         int dem = 0;
         double tong = 0;
         for(ChiTietHoaDon cthd : dscthd){
-            Ve ve = new Ve_DAO().getVeTheoID(cthd.getVe().getMaVe());
-            LoaiVe loaiVe = new LoaiVe_DAO().getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
-            ChiTietLichTrinh ctlt = new CT_LichTrinh_DAO().getCTLTTheoCN(ve.getCtlt().getLichTrinh().getMaLichTrinh(), ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            ChoNgoi choNgoi = new ChoNgoi_DAO().getChoNgoiTheoMa(ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            Toa toa = new Toa_DAO().getToaTheoID(choNgoi.getToa().getMaToa());
+            Ve ve = new VeService() {
+                @Override
+                public List<Ve> getAllVe() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ve getVeTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ve getLaiVe() throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public boolean updateTinhTrangVe(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public List<Ve> getDSVeTheoMaKH(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<Ve> getVeTheoTinhTrang(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(Ve ve) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ve ve) throws RemoteException {
+                    return false;
+                }
+            }.getVeTheoID(cthd.getVe().getMaVe());
+            LoaiVe loaiVe = new LoaiVeService() {
+                @Override
+                public List<LoaiVe> getAllLoaiVe() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoTen(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+            LichTrinh lt = new LichTrinhService() {
+                @Override
+                public List<LichTrinh> getAll() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public LichTrinh getLichTrinhTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<LichTrinh> getDSLichTrinhTheoTrangThai(boolean b) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1, LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhSauNgayHienTai() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhTheoNgay(LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Long getSoLuongChoConTrong(String s) throws RemoteException {
+                    return 0L;
+                }
+
+                @Override
+                public boolean updateTrangThaiChuyenTau(String s, boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateTrangThaiCT(boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateInfo(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean create(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LichTrinh getOne(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            ChiTietLichTrinh ctlt = new CT_LichTrinhService() {
+                @Override
+                public List<ChiTietLichTrinh> getAllChiTietLichTrinh() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateCTLT(ChiTietLichTrinh chiTietLichTrinh, boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public List<ChiTietLichTrinh> getCtltTheoTrangThai(boolean b) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChiTietLichTrinh getCTLTTheoCN(String s, String s1) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public boolean getTrangThaiCN(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public void addChiTietLichTrinh(String s) throws RemoteException {
+
+                }
+
+                @Override
+                public List<ChiTietLichTrinh> getCtltTheoMaLichTrinh(String s) throws RemoteException {
+                    return List.of();
+                }
+            }.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            ChoNgoi choNgoi = new ChoNgoiService() {
+                @Override
+                public List<ChoNgoi> getAllChoNgoi() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoToa(String s, int i) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<ChoNgoi> getDSChoNgoiTheoToa(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<ChoNgoi> getChoNgoiDaDat(LichTrinh lichTrinh) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            Toa toa = new ToaService() {
+                @Override
+                public List<Toa> getAllToa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Toa getToaTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<Toa> getAllToaTheoChuyenTau(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(Toa toa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Toa toa) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getToaTheoID(choNgoi.getToa().getMaToa());
             addTableRow(table, regularFont, ++dem + "", cthd.getVe().getMaVe(),
                         "Vé HK: " + lt.getGaDi().getMaGa() + "-" + lt.getGaDen().getMaGa() +
-                        "-" + lt.getChuyenTau().getSoHieutau() + "-" + dtf.format(lt.getThoiGianKhoiHanh()) +
-                        "-" + choNgoi.getSttCho() + "-" + toa.getSoSTToa() + "-" + toa.getLoaiToa().getMaLoaiToa(),
+                        "-" + lt.getSoHieuTau() + "-" + dtf.format(lt.getThoiGianKhoiHanh()) +
+                        "-" + choNgoi.getSttCho() + "-" + toa.getSttToa() + "-" + toa.getLoaiToa().getMaLoaiToa(),
                         "Vé", "1", df.format(ctlt.getGiaCho()), df.format(cthd.getGiaVe() - 2000), "10%",
                         df.format((cthd.getGiaVe() - 2000) * 1.1));
 
@@ -295,7 +954,7 @@ public class PrintPDF {
     public void inKetCa(NhanVien nv, LocalDateTime gioBatDau, LocalDateTime gioKetThuc, double tienDauCa,
                         double tongTien, double tienBanVe, double tienTraVe, double tienTraVeDoi, double tienThuVeDoi, String ghiChu)
                         throws IOException, DocumentException {
-    String filename = "KetCa_" + nv.getMaNhanVien() + "_" + gioKetThuc.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+    String filename = "KetCa_" + nv.getMaNV() + "_" + gioKetThuc.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
     NumberFormat currencyVN = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));
 
 
@@ -316,8 +975,8 @@ public class PrintPDF {
     // Add shift information
     Font regularFont = new Font(bf, 12, Font.NORMAL);
     document.add(new Paragraph("BẮT ĐẦU CA", regularFont));
-    document.add(new Paragraph("Nhân viên: " + nv.getTenNhanVien(), regularFont));
-    document.add(new Paragraph("Mã nhân viên: " + nv.getMaNhanVien(), regularFont));
+    document.add(new Paragraph("Nhân viên: " + nv.getTenNV(), regularFont));
+    document.add(new Paragraph("Mã nhân viên: " + nv.getMaNV(), regularFont));
     document.add(new Paragraph("Giờ bắt đầu ca: " + gioBatDau.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")), regularFont));
     document.add(new Paragraph("Tiền đầu ca: " + currencyVN.format(tienDauCa), regularFont));
     document.add(new Paragraph("Ghi chú đầu ca: " + getData.ghiChu, regularFont));
@@ -346,7 +1005,7 @@ public class PrintPDF {
 }
 
     public void inHDHuy(HoaDon hoaDon) throws IOException, DocumentException {
-        String filename = hoaDon.getMaHoaDon() + ".pdf";
+        String filename = hoaDon.getMaHD() + ".pdf";
 
         // Create a new document
         Document document = new Document(PageSize.A4);
@@ -361,7 +1020,7 @@ public class PrintPDF {
         img.scaleAbsolute(50, 50);
         document.add(img);
         //Add no invoice left side
-        Paragraph noInvoice = new Paragraph("Số: " + hoaDon.getMaHoaDon(), new Font(bf, 10, Font.BOLD));
+        Paragraph noInvoice = new Paragraph("Số: " + hoaDon.getMaHD(), new Font(bf, 10, Font.BOLD));
         noInvoice.setAlignment(Element.ALIGN_RIGHT);
         document.add(noInvoice);
         // Define fonts
@@ -387,7 +1046,52 @@ public class PrintPDF {
         document.add(new Paragraph("Địa chỉ: Số 12A Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, Thành phố Hồ Chí Minh, Việt Nam", regularFont));
         document.add(new Paragraph(" "));
         // Add buyer info
-        KhachHang kh = new KhachHang_DAO().getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH());
+        KhachHang kh = new KhachHangService() {
+            @Override
+            public List<KhachHang> getAllKhachHang() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public String getAutoGeneratedId() throws RemoteException {
+                return "";
+            }
+
+            @Override
+            public boolean create(KhachHang khachHang) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(KhachHang khachHang) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean updateSoSDT(String s, String s1) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(String s) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public KhachHang getKhachHangTheoMaKH(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public KhachHang getKHTheoCCCD(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public KhachHang getKhachHangTheoSDT(String s) throws RemoteException {
+                return null;
+            }
+        }.getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH());
 
         document.add(new Paragraph("\nHọ tên người hủy vé: " + kh.getTenKH(), boldFont));
         document.add(new Paragraph("Số điện thoại: " + kh.getSoCCCD(), regularFont));
@@ -396,7 +1100,7 @@ public class PrintPDF {
 
         // Staff info
         NhanVien nv = getData.nv;
-        document.add(new Paragraph("\nNhân viên lập hóa đơn: " + nv.getTenNhanVien(), boldFont));
+        document.add(new Paragraph("\nNhân viên lập hóa đơn: " + nv.getTenNV(), boldFont));
 
         document.add(new Paragraph(" "));
         document.add(new Paragraph("DANH SÁCH VÉ HỦY", boldFont));
@@ -412,20 +1116,355 @@ public class PrintPDF {
         // Add headers
         addTableHeader(table, boldFont, "STT", "Mã vé", "Tên hành khách", "Thông tin vé", "Tiền vé(VNĐ)", "Lệ phí trả vé", "Tiền trả");
         // Add ticket row 1
-        ArrayList<ChiTietHoaDon> dscthd = new CT_HoaDon_DAO().getCT_HoaDon(hoaDon.getMaHoaDon());
+        ArrayList<ChiTietHoaDon> dscthd = (ArrayList<ChiTietHoaDon>) new CT_HoaDonService() {
+            @Override
+            public List<ChiTietHoaDon> getAllCT_HoaDon() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public ChiTietHoaDon getCT_HoaDon(String s, String s1) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public ChiTietHoaDon getCT_HoaDonTheoMaVe(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public List<ChiTietHoaDon> getCT_HoaDon(String s) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public boolean create(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(ChiTietHoaDon chiTietHoaDon) throws RemoteException {
+                return false;
+            }
+        }.getCT_HoaDon(hoaDon.getMaHD());
         int count = 0;
         double tongTienVe = 0;
         double tongLePhi = 0;
         double tongTienTra = 0;
 
         for (ChiTietHoaDon cthd : dscthd) {
-            Ve ve = new Ve_DAO().getVeTheoID(cthd.getVe().getMaVe());
-            LoaiVe loaiVe = new LoaiVe_DAO().getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
-            ChiTietLichTrinh ctlt = new CT_LichTrinh_DAO().getCTLTTheoCN(ve.getCtlt().getLichTrinh().getMaLichTrinh(), ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            ChoNgoi choNgoi = new ChoNgoi_DAO().getChoNgoiTheoMa(ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            Ga gaDi = new Ga_DAO().getGaTheoMaGa(lt.getGaDi().getMaGa());
-            Ga gaDen = new Ga_DAO().getGaTheoMaGa(lt.getGaDen().getMaGa());
+            Ve ve = new VeService() {
+                @Override
+                public List<Ve> getAllVe() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ve getVeTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ve getLaiVe() throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public boolean updateTinhTrangVe(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public List<Ve> getDSVeTheoMaKH(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<Ve> getVeTheoTinhTrang(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(Ve ve) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ve ve) throws RemoteException {
+                    return false;
+                }
+            }.getVeTheoID(cthd.getVe().getMaVe());
+            LoaiVe loaiVe = new LoaiVeService() {
+                @Override
+                public List<LoaiVe> getAllLoaiVe() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LoaiVe loaiVe) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoTen(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public LoaiVe getLoaiVeTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+            LichTrinh lt = new LichTrinhService() {
+                @Override
+                public List<LichTrinh> getAll() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public LichTrinh getLichTrinhTheoID(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<LichTrinh> getDSLichTrinhTheoTrangThai(boolean b) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinh(String s, String s1, LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhSauNgayHienTai() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<LichTrinh> traCuuDSLichTrinhTheoNgay(LocalDate localDate) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Long getSoLuongChoConTrong(String s) throws RemoteException {
+                    return 0L;
+                }
+
+                @Override
+                public boolean updateTrangThaiChuyenTau(String s, boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateTrangThaiCT(boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateInfo(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean create(LichTrinh lichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public LichTrinh getOne(String s) throws RemoteException {
+                    return null;
+                }
+            }.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            ChiTietLichTrinh ctlt = new CT_LichTrinhService() {
+                @Override
+                public List<ChiTietLichTrinh> getAllChiTietLichTrinh() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean updateCTLT(ChiTietLichTrinh chiTietLichTrinh, boolean b) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public List<ChiTietLichTrinh> getCtltTheoTrangThai(boolean b) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChiTietLichTrinh getCTLTTheoCN(String s, String s1) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public boolean getTrangThaiCN(String s, String s1) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public void addChiTietLichTrinh(String s) throws RemoteException {
+
+                }
+
+                @Override
+                public List<ChiTietLichTrinh> getCtltTheoMaLichTrinh(String s) throws RemoteException {
+                    return List.of();
+                }
+            }.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            ChoNgoi choNgoi = new ChoNgoiService() {
+                @Override
+                public List<ChoNgoi> getAllChoNgoi() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoToa(String s, int i) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public ChoNgoi getChoNgoiTheoMa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public List<ChoNgoi> getDSChoNgoiTheoToa(String s) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public List<ChoNgoi> getChoNgoiDaDat(LichTrinh lichTrinh) throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public boolean create(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(ChoNgoi choNgoi) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            Ga gaDi = new GaService() {
+                @Override
+                public List<Ga> getAllGa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ga getGaTheoMaGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ga getGaTheoTenGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public double KhoangCach(String s) throws RemoteException {
+                    return 0;
+                }
+
+                @Override
+                public boolean create(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getGaTheoMaGa(lt.getGaDi().getMaGa());
+            Ga gaDen = new GaService() {
+                @Override
+                public List<Ga> getAllGa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ga getGaTheoMaGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ga getGaTheoTenGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public double KhoangCach(String s) throws RemoteException {
+                    return 0;
+                }
+
+                @Override
+                public boolean create(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getGaTheoMaGa(lt.getGaDen().getMaGa());
 
             double tienVe = Math.round(cthd.getGiaVe() * -1);
             double lePhi = Math.round(cthd.getGiaGiam());

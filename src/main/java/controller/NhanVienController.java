@@ -1,6 +1,6 @@
 package controller;
 
-import dao.NhanVien_DAO;
+import service.NhanVienService;
 import entity.NhanVien;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -11,9 +11,11 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class NhanVienController implements Initializable {
@@ -93,11 +95,66 @@ public class NhanVienController implements Initializable {
     @FXML
     private Button btn_reset;
 
-    private final NhanVien_DAO nhanVien_dao = new NhanVien_DAO();
+    private final NhanVienService nhanVienService = new NhanVienService() {
+        @Override
+        public List<NhanVien> getAll() throws RemoteException {
+            return List.of();
+        }
+
+        @Override
+        public NhanVien getNhanVien(String s) throws RemoteException {
+            return null;
+        }
+
+        @Override
+        public boolean create(NhanVien nhanVien) throws RemoteException {
+            return false;
+        }
+
+        @Override
+        public boolean updateInfo(NhanVien nhanVien) throws RemoteException {
+            return false;
+        }
+
+        @Override
+        public boolean delete(String s) throws RemoteException {
+            return false;
+        }
+
+        @Override
+        public boolean updateTinhTrangCV(String s, String s1) throws RemoteException {
+            return false;
+        }
+
+        @Override
+        public List<NhanVien> getDSQuanLy() throws RemoteException {
+            return List.of();
+        }
+
+        @Override
+        public List<NhanVien> getDSNhanVien() throws RemoteException {
+            return List.of();
+        }
+
+        @Override
+        public NhanVien getNhanVienTheoTen(String s) throws RemoteException {
+            return null;
+        }
+
+        @Override
+        public NhanVien getNhanVienTheoSDT(String s) throws RemoteException {
+            return null;
+        }
+    };
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        ArrayList<NhanVien> list = nhanVien_dao.getAll();
+        ArrayList<NhanVien> list = null;
+        try {
+            list = (ArrayList<NhanVien>) nhanVienService.getAll();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         renderNhanVienTable(list);
 
         cb_gioiTinh.setItems(FXCollections.observableArrayList("Nam", "Nữ"));
@@ -106,6 +163,7 @@ public class NhanVienController implements Initializable {
         cb_search.setItems(FXCollections.observableArrayList("Mã nhân viên", "Tên nhân viên", "Số điện thoại"));
 
         // Chức năng tìm kiếm
+        ArrayList<NhanVien> finalList = list;
         btn_search.setOnAction(e -> {
             String search = txt_search.getText().toLowerCase();
             String type = cb_search.getValue();
@@ -125,10 +183,10 @@ public class NhanVienController implements Initializable {
                 alert.show();
                 return;
             }
-            ArrayList<NhanVien> listSearch = new ArrayList<>(list.stream()
+            ArrayList<NhanVien> listSearch = new ArrayList<>(finalList.stream()
                 .filter(nv -> switch (type) {
-                    case "Mã nhân viên" -> nv.getMaNhanVien().toLowerCase().contains(search);
-                    case "Tên nhân viên" -> nv.getTenNhanVien().toLowerCase().contains(search);
+                    case "Mã nhân viên" -> nv.getMaNV().toLowerCase().contains(search);
+                    case "Tên nhân viên" -> nv.getTenNV().toLowerCase().contains(search);
                     case "Số điện thoại" -> nv.getSdt().toLowerCase().contains(search);
                     default -> false;
                 })
@@ -137,8 +195,9 @@ public class NhanVienController implements Initializable {
         });
 
         // Chức năng xóa tìm kiếm
+        ArrayList<NhanVien> finalList2 = list;
         btn_reset.setOnAction(e -> {
-            renderNhanVienTable(list);
+            renderNhanVienTable(finalList2);
             txt_search.clear();
             txt_search.requestFocus();
             cb_search.getSelectionModel().clearSelection();
@@ -149,15 +208,15 @@ public class NhanVienController implements Initializable {
         tbl_nhanVien.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 NhanVien nv = tbl_nhanVien.getSelectionModel().getSelectedItem();
-                txt_maNV.setText(nv.getMaNhanVien());
-                txt_tenNV.setText(nv.getTenNhanVien());
+                txt_maNV.setText(nv.getMaNV());
+                txt_tenNV.setText(nv.getTenNV());
                 txt_cccd.setText(nv.getSoCCCD());
                 cb_gioiTinh.setValue(nv.isGioiTinh() ? "Nữ" : "Nam");
                 datePicker_dob.setValue(nv.getNgaySinh());
                 txt_sdt.setText(nv.getSdt());
                 txt_email.setText(nv.getEmail());
                 cb_chucVu.setValue(nv.getChucVu());
-                cb_tinhTrangCV.setValue(nv.getTinhTrangCV());
+                cb_tinhTrangCV.setValue(nv.getTinhTrangCv());
                 btn_add.setDisable(true);
                 btn_update.setDisable(false);
             }
@@ -180,6 +239,7 @@ public class NhanVienController implements Initializable {
         });
 
         // Chức năng thêm nhân viên
+        ArrayList<NhanVien> finalList1 = list;
         btn_add.setOnAction(e -> {
             String tenNV = txt_tenNV.getText();
             String cccd = txt_cccd.getText();
@@ -196,31 +256,36 @@ public class NhanVienController implements Initializable {
             String tinhTrangCV = cb_tinhTrangCV.getValue();
 
             // tạo mã nhân viên
-            String maNVcuoi = list.getLast().getMaNhanVien();
+            String maNVcuoi = finalList1.getLast().getMaNV();
             String maNV = "NV" + (Integer.parseInt(maNVcuoi.substring(2)) + 1);
 
             if (invalidInput(tenNV, cccd, dob, sdt, chucVu)) return;
             NhanVien nv = new NhanVien(maNV, tenNV, cccd, dob, gioiTinh, sdt, chucVu, email, tinhTrangCV);
             nv.setChucVu(chucVu);
             nv.setEmail(email);
-            if (nhanVien_dao.create(nv)) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Thành công");
-                alert.setHeaderText(null);
-                alert.setContentText("Thêm nhân viên thành công");
-                alert.show();
-                list.add(nv);
-                renderNhanVienTable(list);
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText(null);
-                alert.setContentText("Thêm nhân viên thất bại");
-                alert.show();
+            try {
+                if (nhanVienService.create(nv)) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Thành công");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Thêm nhân viên thành công");
+                    alert.show();
+                    finalList1.add(nv);
+                    renderNhanVienTable(finalList1);
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Thêm nhân viên thất bại");
+                    alert.show();
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
         // Chức năng cập nhật nhân viên
+        ArrayList<NhanVien> finalList3 = list;
         btn_update.setOnAction(e -> {
             String maNV = txt_maNV.getText();
             String tenNV = txt_tenNV.getText();
@@ -241,20 +306,24 @@ public class NhanVienController implements Initializable {
             }
             if (invalidInput(tenNV, cccd, dob, sdt, chucVu)) return;
             NhanVien nv = new NhanVien(maNV, tenNV, cccd, dob, gioiTinh, sdt, email, chucVu, tinhTrangCV);
-            if (nhanVien_dao.updateInfo(nv)) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Thành công");
-                alert.setHeaderText(null);
-                alert.setContentText("Cập nhật nhân viên thành công");
-                alert.show();
-                list.set(list.indexOf(nv), nv);
-                renderNhanVienTable(list);
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText(null);
-                alert.setContentText("Cập nhật nhân viên thất bại");
-                alert.show();
+            try {
+                if (nhanVienService.updateInfo(nv)) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Thành công");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cập nhật nhân viên thành công");
+                    alert.show();
+                    finalList3.set(finalList3.indexOf(nv), nv);
+                    renderNhanVienTable(finalList3);
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cập nhật nhân viên thất bại");
+                    alert.show();
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
         });
     }
