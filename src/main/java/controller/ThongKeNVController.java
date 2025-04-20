@@ -1,6 +1,5 @@
 package controller;
 
-import dao.*;
 import entity.*;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,15 +12,21 @@ import javafx.scene.control.Label;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import service.*;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ThongKeNVController implements Initializable {
@@ -56,19 +61,31 @@ public class ThongKeNVController implements Initializable {
     @FXML
     private BarChart<String, Number> barChart_chuyenTau;
 
-    private NhanVien_DAO nhanVien_dao;
-    private HoaDon_DAO hoaDon_dao;
-    private CT_HoaDon_DAO ct_hoaDon_dao;
-    private Ve_DAO ve_dao;
-    private LichTrinh_DAO lichTrinh_dao;
-    private CT_LichTrinh_DAO ct_lichTrinh_dao;
-    private Ga_DAO ga_dao;
+    private NhanVienService nhanVienService;
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ct_hoaDonService;
+    private VeService veService;
+    private LichTrinhService lichTrinhService;
+    private CT_LichTrinhService ct_lichTrinhService;
+    private GaService gaService;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         LocalDate currentDate = LocalDate.now();
-        initDAO();
-        initComponent(currentDate);
+        try {
+            initDAO();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (NotBoundException e) {
+            throw new RuntimeException(e);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            initComponent(currentDate);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
         cb_thongKe.setOnAction(event -> {
             if (cb_thongKe.getValue().equals("Tháng")) {
@@ -83,17 +100,37 @@ public class ThongKeNVController implements Initializable {
         btn_search.setOnAction(event -> {
             if (cb_thongKe.getValue().equals("Tháng")) {
                 LocalDate date = LocalDate.of(Integer.parseInt(cb_nam.getValue()), Integer.parseInt(cb_thang.getValue()), 1);
-                renderNhanVien(date, 1);
-                renderChuyenTau();
+                try {
+                    renderNhanVien(date, 1);
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    renderChuyenTau();
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
             } else {
                 LocalDate date = LocalDate.of(Integer.parseInt(cb_nam.getValue()), 1, 1);
-                renderNhanVien(date, 2);
-                renderChuyenTau();
+                try {
+                    renderNhanVien(date, 2);
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    renderChuyenTau();
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
         lbl_taoBaoCaoNV.setOnMouseClicked(event -> {
-            ghiFileExcelNV();
+            try {
+                ghiFileExcelNV();
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Thông báo");
             alert.setHeaderText(null);
@@ -102,7 +139,11 @@ public class ThongKeNVController implements Initializable {
         });
 
         lbl_taoBaoCaoChuyenTau.setOnMouseClicked(event -> {
-            ghiFileExcelChuyenTau();
+            try {
+                ghiFileExcelChuyenTau();
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Thông báo");
             alert.setHeaderText(null);
@@ -111,20 +152,20 @@ public class ThongKeNVController implements Initializable {
         });
     }
 
-    private void initComponent(LocalDate currentDate) {
+    private void initComponent(LocalDate currentDate) throws RemoteException {
         initComboBox(currentDate);
         renderNhanVien(currentDate, 1);
         renderChuyenTau();
     }
 
-    private void initDAO() {
-        nhanVien_dao = new NhanVien_DAO();
-        hoaDon_dao = new HoaDon_DAO();
-        ve_dao = new Ve_DAO();
-        lichTrinh_dao = new LichTrinh_DAO();
-        ct_lichTrinh_dao = new CT_LichTrinh_DAO();
-        ct_hoaDon_dao = new CT_HoaDon_DAO();
-        ga_dao = new Ga_DAO();
+    private void initDAO() throws MalformedURLException, NotBoundException, RemoteException {
+        nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/NhanVienService");
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+        ct_hoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+        veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+        ct_lichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
     }
 
     private void initComboBox(LocalDate date) {
@@ -146,13 +187,13 @@ public class ThongKeNVController implements Initializable {
         }
     }
 
-    private void renderNhanVien(LocalDate date, int type) { //type: 1: thống kê theo tháng, 2: thống kê theo năm
-        ArrayList<NhanVien> listNhanVien = nhanVien_dao.getDSNhanVien();
+    private void renderNhanVien(LocalDate date, int type) throws RemoteException { //type: 1: thống kê theo tháng, 2: thống kê theo năm
+        List<NhanVien> listNhanVien = nhanVienService.getDSNhanVien();
         lbl_soNv.setText(listNhanVien.size() + " nhân viên");
 
-        ArrayList<HoaDon> listHoaDon = (type == 1)
-                ? hoaDon_dao.getDSHDTheoThang(date.getMonthValue(), date.getYear())
-                : hoaDon_dao.getDSHDTheoNam(String.valueOf(date.getYear()));
+        List<HoaDon> listHoaDon = (type == 1)
+                ? hoaDonService.getDSHDTheoThang(date.getMonthValue(), date.getYear())
+                : hoaDonService.getDSHDTheoNam(String.valueOf(date.getYear()));
 
         // nếu ds hóa đơn rỗng null thì return
         if (listHoaDon == null || listHoaDon.isEmpty()) {
@@ -161,8 +202,8 @@ public class ThongKeNVController implements Initializable {
 
         HashMap<String, Double> mapNV = new HashMap<>();
         for (HoaDon hoaDon : listHoaDon) {
-            String maNV = hoaDon.getNhanVien().getMaNhanVien();
-            String tenNhanVien = nhanVien_dao.getNhanVien(maNV).getTenNhanVien();
+            String maNV = hoaDon.getNhanVien().getMaNV();
+            String tenNhanVien = nhanVienService.getNhanVien(maNV).getTenNV();
             double doanhThu = hoaDon.getTongTien();
             mapNV.put(tenNhanVien, mapNV.getOrDefault(tenNhanVien, 0.0) + doanhThu);
         }
@@ -181,21 +222,21 @@ public class ThongKeNVController implements Initializable {
         barChart_top5nv.getYAxis().setLabel("Doanh thu");
     }
 
-    private void renderChuyenTau() { //type: 1: thống kê theo tháng, 2: thống kê theo năm
-        ArrayList<LichTrinh> listLichTrinh = lichTrinh_dao.getDSLichTrinhTheoTrangThai(true);
+    private void renderChuyenTau() throws RemoteException { //type: 1: thống kê theo tháng, 2: thống kê theo năm
+        List<LichTrinh> listLichTrinh = lichTrinhService.getDSLichTrinhTheoTrangThai(true);
         int soChuyenTau = listLichTrinh.size();
         lbl_soChuyenTau.setText(soChuyenTau + " chuyến tàu");
 
 
-        ArrayList<Ve> dsVe = new ArrayList<>(ve_dao.getVeTheoTinhTrang("DaBan"));
-        dsVe.addAll(ve_dao.getVeTheoTinhTrang("DaDoi"));
+        ArrayList<Ve> dsVe = new ArrayList<>(veService.getVeTheoTinhTrang("DaBan"));
+        dsVe.addAll(veService.getVeTheoTinhTrang("DaDoi"));
 
         HashMap<String, Integer> mapChuyenTau = new HashMap<>();
 
         for (Ve ve : dsVe) {
-            String maLichTrinh = ve.getCtlt().getLichTrinh().getMaLichTrinh();
-            LichTrinh lichTrinh = lichTrinh_dao.getLichTrinhTheoID(maLichTrinh);
-            Ga diemDen = ga_dao.getGaTheoMaGa(lichTrinh.getGaDen().getMaGa());
+            String maLichTrinh = ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh();
+            LichTrinh lichTrinh = lichTrinhService.getLichTrinhTheoID(maLichTrinh);
+            Ga diemDen = gaService.getGaTheoMaGa(lichTrinh.getGaDen().getMaGa());
             String tenGaDen = diemDen.getTenGa();
             mapChuyenTau.put(tenGaDen, mapChuyenTau.getOrDefault(tenGaDen, 0) + 1);
         }
@@ -215,7 +256,7 @@ public class ThongKeNVController implements Initializable {
         barChart_chuyenTau.getYAxis().setLabel("Xu hướng mua vé");
     }
 
-    private void ghiFileExcelNV() {
+    private void ghiFileExcelNV() throws RemoteException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Thống kê nhân viên");
 
@@ -275,12 +316,12 @@ public class ThongKeNVController implements Initializable {
             cell.setCellValue(headers[i]);
             cell.setCellStyle(headerStyle);
         }
-        ArrayList<NhanVien> listNhanVien = nhanVien_dao.getDSNhanVien();
-        ArrayList<HoaDon> listHoaDon = hoaDon_dao.getAllHoaDon();
+        List<NhanVien> listNhanVien = nhanVienService.getDSNhanVien();
+        List<HoaDon> listHoaDon = hoaDonService.getAllHoaDon();
         HashMap<String, Double> mapNV = new HashMap<>();
         for (HoaDon hoaDon : listHoaDon) {
             if (hoaDon.getNhanVien() != null) {
-                String tenNhanVien = hoaDon.getNhanVien().getTenNhanVien();
+                String tenNhanVien = hoaDon.getNhanVien().getTenNV();
                 double doanhThu = hoaDon.getTongTien();
                 mapNV.put(tenNhanVien, mapNV.getOrDefault(tenNhanVien, 0.0) + doanhThu);
             }
@@ -296,11 +337,11 @@ public class ThongKeNVController implements Initializable {
             cell.setCellStyle(style1);
 
             cell = row.createCell(1);
-            cell.setCellValue(nv.getMaNhanVien());
+            cell.setCellValue(nv.getMaNV());
             cell.setCellStyle(style1);
 
             cell = row.createCell(2);
-            cell.setCellValue(nv.getTenNhanVien());
+            cell.setCellValue(nv.getTenNV());
             cell.setCellStyle(style1);
 
             cell = row.createCell(3);
@@ -320,7 +361,7 @@ public class ThongKeNVController implements Initializable {
             cell.setCellStyle(style1);
 
             cell = row.createCell(7);
-            cell.setCellValue(mapNV.getOrDefault(nv.getTenNhanVien(), 0.0));
+            cell.setCellValue(mapNV.getOrDefault(nv.getTenNV(), 0.0));
             cell.setCellStyle(style1);
 
         }
@@ -344,7 +385,7 @@ public class ThongKeNVController implements Initializable {
         }
     }
 
-    private void ghiFileExcelChuyenTau() {
+    private void ghiFileExcelChuyenTau() throws RemoteException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Thống kê chuyến tàu");
 
@@ -402,13 +443,13 @@ public class ThongKeNVController implements Initializable {
             cell.setCellValue(headers[i]);
             cell.setCellStyle(headerStyle);
         }
-        ArrayList<LichTrinh> listLichTrinh = lichTrinh_dao.getDSLichTrinhTheoTrangThai(true);
-        ArrayList<Ve> dsVe = new ArrayList<>(ve_dao.getVeTheoTinhTrang("DaBan"));
-        dsVe.addAll(ve_dao.getVeTheoTinhTrang("DaDoi"));
+        List<LichTrinh> listLichTrinh = lichTrinhService.getDSLichTrinhTheoTrangThai(true);
+        ArrayList<Ve> dsVe = new ArrayList<>(veService.getVeTheoTinhTrang("DaBan"));
+        dsVe.addAll(veService.getVeTheoTinhTrang("DaDoi"));
         HashMap<String, Integer> mapChuyenTau = new HashMap<>();
 
         for (Ve ve : dsVe) {
-            String maLichTrinh = ve.getCtlt().getLichTrinh().getMaLichTrinh();
+            String maLichTrinh = ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh();
             mapChuyenTau.put(maLichTrinh, mapChuyenTau.getOrDefault(maLichTrinh, 0) + 1);
         }
         int rowNum = 1;
@@ -419,15 +460,15 @@ public class ThongKeNVController implements Initializable {
             cell.setCellStyle(style1);
 
             cell = row.createCell(1);
-            cell.setCellValue(lt.getChuyenTau().getSoHieutau());
+            cell.setCellValue(lt.getSoHieuTau().getSoHieuTau());
             cell.setCellStyle(style1);
 
             cell = row.createCell(2);
-            cell.setCellValue(ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa());
+            cell.setCellValue(gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa());
             cell.setCellStyle(style1);
 
             cell = row.createCell(3);
-            cell.setCellValue(ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa());
+            cell.setCellValue(gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa());
             cell.setCellStyle(style1);
 
             cell = row.createCell(4);

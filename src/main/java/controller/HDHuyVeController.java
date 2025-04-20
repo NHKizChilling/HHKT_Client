@@ -2,7 +2,6 @@ package controller;
 
 import com.itextpdf.text.DocumentException;
 import com.jfoenix.controls.JFXButton;
-import dao.*;
 import entity.*;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,9 +11,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import service.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -73,11 +77,13 @@ public class HDHuyVeController implements Initializable {
     @FXML
     private JFXButton btn_xacNhan;
 
-    private Ve_DAO ve_dao;
-    private KhachHang_DAO khachHang_dao;
-    private HoaDon_DAO hoaDon_dao;
-    private CT_HoaDon_DAO ct_hoaDon_dao;
-    private LoaiVe_DAO loaiVe_dao;
+    private VeService veService;
+    private KhachHangService khachHangService;
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ctHoaDonService;
+    private LoaiVeService loaiVeService;
+    private LichTrinhService lichTrinhService;
+    private GaService gaService;
 
     private int tongSoVe = 0;
     private double tongTienVe = 0;
@@ -92,7 +98,7 @@ public class HDHuyVeController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // TODO
-        initDAO();
+        initServices();
         initComponent();
 
         btn_backTraVe.setOnAction(actionEvent -> {
@@ -109,9 +115,14 @@ public class HDHuyVeController implements Initializable {
                 String cccd = txt_cccd.getText();
                 String sdt = txt_sdt.getText();
 
-                KhachHang khHuyVe = khachHang_dao.getKHTheoCCCD(cccd);
-                if (khHuyVe == null) {
-                    khHuyVe = khachHang_dao.getKhachHangTheoSDT(sdt);
+                KhachHang khHuyVe = null;
+                try {
+                    khHuyVe = khachHangService.getKHTheoCCCD(cccd);
+                    if (khHuyVe == null) {
+                        khHuyVe = khachHangService.getKhachHangTheoSDT(sdt);
+                    }
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
                 }
 
                 if (!kiemTraKH(khHuyVe)) {
@@ -129,15 +140,19 @@ public class HDHuyVeController implements Initializable {
                 hoaDon.setNgayLapHoaDon(LocalDateTime.now());
                 hoaDon.setTrangThai(false);
 
-                if (hoaDon_dao.createTempInvoice(hoaDon)) {
-                    getData.hd = hoaDon_dao.getHoaDonVuaTao();
-                } else {
-                    // thông báo
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Lỗi");
-                    alert.setHeaderText("Không thể tạo hóa đơn");
-                    alert.showAndWait();
-                    return;
+                try {
+                    if (hoaDonService.createTempInvoice(hoaDon)) {
+                        getData.hd = hoaDonService.getHoaDonVuaTao();
+                    } else {
+                        // thông báo
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Lỗi");
+                        alert.setHeaderText("Không thể tạo hóa đơn");
+                        alert.showAndWait();
+                        return;
+                    }
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
                 }
 
                 hoaDon = getData.hd;
@@ -146,39 +161,43 @@ public class HDHuyVeController implements Initializable {
                 hoaDon.setTongGiamGia(tongLePhi); // tổng giảm giá = tổng lệ phí
                 hoaDon.setKhuyenMai(new KhuyenMai(null));
 
-                if (hoaDon_dao.update(hoaDon)) {
-                    try {
-                        for (Ve ve : listVe) {
-                            ChiTietHoaDon ctHoaDon = new ChiTietHoaDon();
-                            ctHoaDon.setHoaDon(new HoaDon(hoaDon.getMaHoaDon()));
-                            ctHoaDon.setVe(ve);
-                            ChiTietHoaDon ctHoaDonCu = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
-                            ctHoaDon.setGiaVe(0 - ctHoaDonCu.getGiaVe()); // giá vé = giá vé cũ
-                            ctHoaDon.setGiaGiam(mapLePhi.get(ve.getMaVe())); // giảm giá = lệ phí
-                            if (ct_hoaDon_dao.create(ctHoaDon)) {
-                                ve.setTinhTrangVe("DaHuy");
-                                ve_dao.update(ve);
-                            } else {
-                                // thông báo
-                                Alert alert = new Alert(Alert.AlertType.ERROR);
-                                alert.setTitle("Lỗi");
-                                alert.setHeaderText("Không thể cập nhật chi tiết hóa đơn");
-                                alert.showAndWait();
-                                return;
+                try {
+                    if (hoaDonService.update(hoaDon)) {
+                        try {
+                            for (Ve ve : listVe) {
+                                ChiTietHoaDon ctHoaDon = new ChiTietHoaDon();
+                                ctHoaDon.setHoaDon(new HoaDon(hoaDon.getMaHD()));
+                                ctHoaDon.setVe(ve);
+                                ChiTietHoaDon ctHoaDonCu = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+                                ctHoaDon.setGiaVe(0 - ctHoaDonCu.getGiaVe()); // giá vé = giá vé cũ
+                                ctHoaDon.setGiaGiam(mapLePhi.get(ve.getMaVe())); // giảm giá = lệ phí
+                                if (ctHoaDonService.create(ctHoaDon)) {
+                                    ve.setTinhTrangVe("DaHuy");
+                                    veService.update(ve);
+                                } else {
+                                    // thông báo
+                                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                                    alert.setTitle("Lỗi");
+                                    alert.setHeaderText("Không thể cập nhật chi tiết hóa đơn");
+                                    alert.showAndWait();
+                                    return;
+                                }
+                                printPDF.inHDHuy(hoaDon);
+                                lamMoi();
                             }
-                            printPDF.inHDHuy(hoaDon);
-                            lamMoi();
+                        } catch (IOException | DocumentException e) {
+                            throw new RuntimeException(e);
                         }
-                    } catch (IOException | DocumentException e) {
-                        throw new RuntimeException(e);
+                    } else {
+                        // thông báo
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Lỗi");
+                        alert.setHeaderText("Không thể cập nhật hóa đơn");
+                        alert.showAndWait();
+                        return;
                     }
-                } else {
-                    // thông báo
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Lỗi");
-                    alert.setHeaderText("Không thể cập nhật hóa đơn");
-                    alert.showAndWait();
-                    return;
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
                 }
 
 
@@ -225,35 +244,61 @@ public class HDHuyVeController implements Initializable {
         tbl_dsVe.setItems(list);
         col_stt.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(tbl_dsVe.getItems().indexOf(p.getValue()) + 1 + ""));
         col_hoTen.setCellValueFactory(p -> {
-            String ten = p.getValue().getTenHanhKhach();
+            String ten = p.getValue().getTenKH();
             return new SimpleStringProperty(ten);
         });
 
         col_thongTinVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            LoaiVe lv = loaiVe_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(new Ga_DAO().getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " +
-                    new Ga_DAO().getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + " \n" +
-                    "Giờ khởi hành: \n" + lt.getThoiGianKhoiHanh().format(formatter) + " \n" +
-                    lv.getTenLoaiVe());
+            Ve ve = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                LoaiVe lv = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+                LichTrinh lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                return new SimpleStringProperty(gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " +
+                        gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + " \n" +
+                        "Giờ khởi hành: \n" + lt.getThoiGianKhoiHanh().format(formatter) + " \n" +
+                        lv.getTenLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         col_tienVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            Ve ve = null;
+            ChiTietHoaDon ctHoaDon = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(currencyVN.format(ctHoaDon.getGiaVe() - ctHoaDon.getGiaGiam()));
         });
 
         col_lePhi.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            Ve ve = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(currencyVN.format(mapLePhi.get(ve.getMaVe())));
         });
 
         col_tienTra.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            Ve ve = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            ChiTietHoaDon ctHoaDon = null;
+            try {
+                ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(currencyVN.format(ctHoaDon.getGiaVe() - ctHoaDon.getGiaGiam() - mapLePhi.get(ve.getMaVe())));
         });
     }
@@ -261,7 +306,12 @@ public class HDHuyVeController implements Initializable {
     private void renderLabel() {
 
         for (Ve ve : listVe) {
-            ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            ChiTietHoaDon ctHoaDon = null;
+            try {
+                ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             tongTienVe += ctHoaDon.getGiaVe() - ctHoaDon.getGiaGiam();
             tongLePhi += mapLePhi.get(ve.getMaVe());
             tongTienTra += ctHoaDon.getGiaVe() - ctHoaDon.getGiaGiam() - mapLePhi.get(ve.getMaVe());
@@ -297,9 +347,14 @@ public class HDHuyVeController implements Initializable {
         String sdt = txt_sdt.getText();
 
         if (!cccd.isEmpty() || !sdt.isEmpty()) {
-            KhachHang kh = khachHang_dao.getKHTheoCCCD(cccd);
-            if (kh == null) {
-                kh = khachHang_dao.getKhachHangTheoSDT(sdt);
+            KhachHang kh = null;
+            try {
+                kh = khachHangService.getKHTheoCCCD(cccd);
+                if (kh == null) {
+                    kh = khachHangService.getKhachHangTheoSDT(sdt);
+                }
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
             }
 
             if (kh != null) {
@@ -322,9 +377,15 @@ public class HDHuyVeController implements Initializable {
         return false;
     }
 
-    ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(listVe.getFirst().getMaVe());
-    HoaDon hd = hoaDon_dao.getHoaDonTheoMa(ctHoaDon.getHoaDon().getMaHoaDon());
-    KhachHang tmp = khachHang_dao.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH());
+    ChiTietHoaDon ctHoaDon = null;
+    KhachHang tmp = null;
+    try {
+        ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(listVe.getFirst().getMaVe());
+        HoaDon hd = hoaDonService.getHoaDonTheoMa(ctHoaDon.getHoaDon().getMaHD());
+        tmp = khachHangService.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH());
+    } catch (RemoteException e) {
+        throw new RuntimeException(e);
+    }
 
     if (!tmp.getMaKH().equals(kh.getMaKH())) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -333,17 +394,30 @@ public class HDHuyVeController implements Initializable {
     }
 
     return listVe.stream()
-            .map(ve -> khachHang_dao.getKhachHangTheoMaKH(ve.getKhachHang().getMaKH()))
+            .map(ve -> {
+                try {
+                    return khachHangService.getKhachHangTheoMaKH(ve.getKhachHang().getMaKH());
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
+            })
             .anyMatch(tmpKH -> tmpKH.getMaKH().equals(kh.getMaKH()));
 }
 
-    private void initDAO() {
-        ve_dao = new Ve_DAO();
-        khachHang_dao = new KhachHang_DAO();
-        hoaDon_dao = new HoaDon_DAO();
-        ct_hoaDon_dao = new CT_HoaDon_DAO();
-        loaiVe_dao = new LoaiVe_DAO();
-
+    private void initServices() {
+        try {
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
         listVe = getData.dsve;
         mapLePhi = getData.mapLePhi;
     }

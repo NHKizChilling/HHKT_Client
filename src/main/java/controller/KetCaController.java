@@ -1,9 +1,6 @@
 package controller;
 
 import com.itextpdf.text.DocumentException;
-import dao.CT_HoaDon_DAO;
-import dao.HoaDon_DAO;
-import dao.Ve_DAO;
 import entity.ChiTietHoaDon;
 import entity.HoaDon;
 import entity.NhanVien;
@@ -18,13 +15,21 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import service.CT_HoaDonService;
+import service.HoaDonService;
+import service.VeService;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -93,10 +98,11 @@ public class KetCaController implements Initializable {
     private double tienDauCa;
     private double tongTien;
 
-    private HoaDon_DAO hoaDon_dao;
-    private CT_HoaDon_DAO ct_hoaDon_dao;
-    private Ve_DAO ve_dao;
     private PrintPDF printPDF;
+
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ctHoaDonService;
+    private VeService veService;
 
     int soVeBanUI; // Số vé đã bán
     int soVeHuyUI; // Số vé đã hủy
@@ -114,8 +120,12 @@ public class KetCaController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        initDAO();
-        setInfo();
+        initService();
+        try {
+            setInfo();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
         btn_BackBanVe.setOnAction(event -> {
             Stage stage = (Stage) btn_BackBanVe.getScene().getWindow();
@@ -165,7 +175,7 @@ public class KetCaController implements Initializable {
         });
     }
 
-    public void setInfo() {
+    public void setInfo() throws RemoteException {
         nv = getData.nv;
         gioBatDau = getData.gioMoCa;
         tienDauCa = getData.tienDauCa;
@@ -177,11 +187,11 @@ public class KetCaController implements Initializable {
 
     private void renderDauCa() {
         lbl_gioMoCa.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(gioBatDau));
-        lbl_tenNV.setText(nv.getTenNhanVien());
+        lbl_tenNV.setText(nv.getTenNV());
         lbl_tienDauCa.setText(df.format(Math.round(tienDauCa / 1000) * 1000));
     }
 
-    private void renderTrongCa() {
+    private void renderTrongCa() throws RemoteException {
         soVeBanUI = 0; // Số vé đã bán
         soVeHuyUI = 0; // Số vé đã hủy
         soVeDoiUI = 0; // Số vé đã đổi
@@ -192,7 +202,7 @@ public class KetCaController implements Initializable {
         tienThuVeDoi = 0;
 
         // Lấy các hóa đơn trong khoảng thời gian từ đầu ca đến hiện tại
-        ArrayList<HoaDon> dsHoaDon = hoaDon_dao.getHoaDonTheoNV(nv.getMaNhanVien()).stream()
+        ArrayList<HoaDon> dsHoaDon = hoaDonService.getHoaDonTheoNV(nv.getMaNV()).stream()
         .filter(hd -> hd.getNgayLapHoaDon().isAfter(gioBatDau) && hd.getNgayLapHoaDon().isBefore(LocalDateTime.now()))
         .collect(Collectors.toCollection(ArrayList::new));
 
@@ -202,11 +212,17 @@ public class KetCaController implements Initializable {
             double tienHoaDon = hd.getTongTien();
 
             // Get the list of invoice details
-            ArrayList<ChiTietHoaDon> dsCTHD = ct_hoaDon_dao.getCT_HoaDon(hd.getMaHoaDon());
+            List<ChiTietHoaDon> dsCTHD = ctHoaDonService.getCT_HoaDon(hd.getMaHD());
 
             // Get the list of tickets from the invoice details
             ArrayList<Ve> dsVe = dsCTHD.stream()
-                    .map(cthd -> ve_dao.getVeTheoID(cthd.getVe().getMaVe()))
+                    .map(cthd -> {
+                        try {
+                            return veService.getVeTheoID(cthd.getVe().getMaVe());
+                        } catch (RemoteException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
                     .collect(Collectors.toCollection(ArrayList::new));
 
             // Đếm số vé theo tình trạng
@@ -224,7 +240,7 @@ public class KetCaController implements Initializable {
                     soVeDoiUI += dsVe.size();
                 } else if (soVeBan > 0 && soVeHuy > 0 && soVeDoi > 0) { // Trường hợp Hóa đơn bán vé có vé "DaBan" và "DaHuy" và "DaDoi"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                         soVeBanUI++;
                         if (ve.getTinhTrangVe().equals("DaDoi") || ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -234,7 +250,7 @@ public class KetCaController implements Initializable {
                     tienBanVe += tienHoaDon;
                 } else if (soVeBan > 0 && (soVeHuy > 0 || soVeDoi > 0)) { // Trường hợp Hóa đơn bán vé có vé "DaHuy" hoặc "DaDoi"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                         soVeBanUI++;
                         if (ve.getTinhTrangVe().equals("DaHuy") || ve.getTinhTrangVe().equals("DaDoi")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -244,7 +260,7 @@ public class KetCaController implements Initializable {
                     tienBanVe += tienHoaDon;
                 } else if (soVeBan == 0 && soVeDoi > 0 && soVeHuy > 0) { // Trường hợp hóa đơn đổi vé có vé "DaHuy"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                         soVeDoiUI++;
                         if (ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -262,7 +278,7 @@ public class KetCaController implements Initializable {
                     soVeHuyUI += dsVe.size();
                 } else { // Trường hợp hóa đơn đổi vé có vé "DaHuy"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                         if (ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
                             soVeHuy--;
@@ -321,11 +337,16 @@ public class KetCaController implements Initializable {
         }
     }
 
-    private void initDAO() {
-        hoaDon_dao = new HoaDon_DAO();
-        ct_hoaDon_dao = new CT_HoaDon_DAO();
-        ve_dao = new Ve_DAO();
-        printPDF = new PrintPDF();
+    private void initService() {
+        try {
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/VeService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            printPDF = new PrintPDF();
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 
     private boolean checkInput() {

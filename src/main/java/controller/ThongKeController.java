@@ -5,10 +5,6 @@
  */
 package controller;
 
-import dao.CT_HoaDon_DAO;
-import dao.CT_LichTrinh_DAO;
-import dao.HoaDon_DAO;
-import dao.Ve_DAO;
 import entity.ChiTietHoaDon;
 import entity.HoaDon;
 import entity.Ve;
@@ -25,15 +21,24 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import service.CT_HoaDonService;
+import service.CT_LichTrinhService;
+import service.HoaDonService;
+import service.VeService;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 
@@ -87,15 +92,28 @@ public class ThongKeController implements Initializable {
     @FXML
     private BarChart<String, Number> barChart_doanhThu;
 
-    HoaDon_DAO hoaDon_dao;
-    CT_LichTrinh_DAO ctLichTrinh_dao;
-    Ve_DAO ve_dao;
-    CT_HoaDon_DAO ctHoaDon_dao;
+
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ctHoaDonService;
+    private VeService veService;
+    private CT_LichTrinhService ctLichTrinhService;
 
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        initDAO();
-        initComponents();
+        try {
+            initServices();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (NotBoundException e) {
+            throw new RuntimeException(e);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            initComponents();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
         cb_thongKe.setOnAction(e -> {
             String selected = cb_thongKe.getValue();
@@ -110,7 +128,11 @@ public class ThongKeController implements Initializable {
                         cb_thang.setValue(String.valueOf(now.getMonthValue()));
                         cb_nam.setValue(String.valueOf(now.getYear()));
 
-                        renderInfo(now, 1);
+                        try {
+                            renderInfo(now, 1);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     case "Tháng" -> {
                         cb_ngay.setDisable(true);
@@ -119,7 +141,11 @@ public class ThongKeController implements Initializable {
                         cb_thang.setValue(String.valueOf(now.getMonthValue()));
                         cb_nam.setValue(String.valueOf(now.getYear()));
 
-                        renderInfo(now, 2);
+                        try {
+                            renderInfo(now, 2);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     case "Năm" -> {
                         cb_ngay.setDisable(true);
@@ -127,7 +153,11 @@ public class ThongKeController implements Initializable {
 
                         cb_nam.setValue(String.valueOf(now.getYear()));
 
-                        renderInfo(now, 3);
+                        try {
+                            renderInfo(now, 3);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 }
             }
@@ -161,16 +191,28 @@ public class ThongKeController implements Initializable {
                         int day = Integer.parseInt(cb_ngay.getValue());
                         int month = Integer.parseInt(cb_thang.getValue());
                         int year = Integer.parseInt(cb_nam.getValue());
-                        renderInfo(LocalDateTime.of(year, month, day, 0, 0), 1);
+                        try {
+                            renderInfo(LocalDateTime.of(year, month, day, 0, 0), 1);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     case "Tháng" -> {
                         int month = Integer.parseInt(cb_thang.getValue());
                         int year = Integer.parseInt(cb_nam.getValue());
-                        renderInfo(LocalDateTime.of(year, month, 1, 0, 0), 2);
+                        try {
+                            renderInfo(LocalDateTime.of(year, month, 1, 0, 0), 2);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     case "Năm" -> {
                         int year = Integer.parseInt(cb_nam.getValue());
-                        renderInfo(LocalDateTime.of(year, 1, 1, 0, 0), 3);
+                        try {
+                            renderInfo(LocalDateTime.of(year, 1, 1, 0, 0), 3);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 }
             }
@@ -179,7 +221,11 @@ public class ThongKeController implements Initializable {
         cb_sumNam.setOnAction(e -> {
             String year = cb_sumNam.getValue();
             if (year != null) {
-                renderChart(year);
+                try {
+                    renderChart(year);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -194,18 +240,18 @@ public class ThongKeController implements Initializable {
         });
     }
 
-    private void initComponents() {
+    private void initComponents() throws RemoteException {
         LocalDate now = LocalDate.now();
         initComboBox(now);
         renderInfo(LocalDateTime.now(), 1); // Mặc định hiển thị thông kê theo ngày
         renderChart(String.valueOf(now.getYear()));
     }
 
-    private void initDAO() {
-        hoaDon_dao = new HoaDon_DAO();
-        ctLichTrinh_dao = new CT_LichTrinh_DAO();
-        ve_dao = new Ve_DAO();
-        ctHoaDon_dao = new CT_HoaDon_DAO();
+    private void initServices() throws MalformedURLException, NotBoundException, RemoteException {
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+        ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+        veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
     }
 
     private void initComboBox(LocalDate date) {
@@ -235,30 +281,31 @@ public class ThongKeController implements Initializable {
     }
 
     // input là ngày/tháng/năm, type = 1: ngày, 2: tháng, 3: năm để xác định loại thống kê
-    private void renderInfo(LocalDateTime date, int type) {
+    private void renderInfo(LocalDateTime date, int type) throws RemoteException {
         int soVeBan = 0; // Số vé đã bán
         int soVeTra = 0; // Số vé đã trả
         int soVeDoi = 0; // Số vé đã đổi
 
         double doanhThu = 0; // Doanh thu
-        ArrayList<HoaDon> listHoaDon = new ArrayList<>();
+        List<HoaDon> listHoaDon = new ArrayList<>();
+        LocalDate tmp = date.toLocalDate();
 
         switch (type) {
             // nếu type = 1 thì lấy danh sách hóa đơn theo ngày
-            case 1 -> listHoaDon = hoaDon_dao.getDSHDTheoNgay(date);
+            case 1 -> listHoaDon = hoaDonService.getDSHDTheoNgay(tmp);
             // nếu type = 2 thì lấy danh sách hóa đơn theo tháng
-            case 2 -> listHoaDon = hoaDon_dao.getDSHDTheoThang(date.getMonthValue(), date.getYear());
+            case 2 -> listHoaDon = hoaDonService.getDSHDTheoThang(date.getMonthValue(), date.getYear());
             // nếu type = 3 thì lấy danh sách hóa đơn theo năm
-            case 3 -> listHoaDon = hoaDon_dao.getDSHDTheoNam(String.valueOf(date.getYear()));
+            case 3 -> listHoaDon = hoaDonService.getDSHDTheoNam(String.valueOf(date.getYear()));
         }
 
 
         // Lặp qua từng hóa đơn để lấy chi tiết hóa đơn
         for (HoaDon hoaDon : listHoaDon.stream().filter(HoaDon::isTrangThai).toList()) {
             // Lấy chi tiết hóa đơn theo mã hóa đơn
-            for (ChiTietHoaDon cthd : ctHoaDon_dao.getCT_HoaDon(hoaDon.getMaHoaDon())) {
+            for (ChiTietHoaDon cthd : ctHoaDonService.getCT_HoaDon(hoaDon.getMaHD())) {
                 // Lấy vé theo mã vé
-                Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                 // Lấy tình trạng vé và cập nhật số vé bán, trả, đổi
                 switch (ve.getTinhTrangVe()) {
                     case "DaBan" -> soVeBan++;
@@ -278,20 +325,20 @@ public class ThongKeController implements Initializable {
         lbl_doanhThu.setText(String.format("%,.0f", doanhThu) + " VNĐ");
     }
 
-    private void renderChart(String year) {
+    private void renderChart(String year) throws RemoteException {
         barChart_doanhThu.getData().clear();
         double tongDoanhThu = 0;
         int tongVeBan = 0;
 
         // Lấy danh sách hóa đơn theo năm
-        ArrayList<HoaDon> listHoaDon = hoaDon_dao.getDSHDTheoNam(year);
+        List<HoaDon> listHoaDon = hoaDonService.getDSHDTheoNam(year);
         // Lặp qua từng hóa đơn để lấy chi tiết hóa đơn
         for (HoaDon hoaDon : listHoaDon) {
             // Lấy chi tiết hóa đơn theo mã hóa đơn
-            String maHoaDon = hoaDon.getMaHoaDon();
-            for (ChiTietHoaDon cthd : ctHoaDon_dao.getCT_HoaDon(maHoaDon)) {
+            String maHoaDon = hoaDon.getMaHD();
+            for (ChiTietHoaDon cthd : ctHoaDonService.getCT_HoaDon(maHoaDon)) {
                 // Tính tổng vé bán
-                Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                 if (ve.getTinhTrangVe().equals("DaBan") || ve.getTinhTrangVe().equals("DaDoi")) {
                     tongVeBan++;
                 }
@@ -390,7 +437,12 @@ public class ThongKeController implements Initializable {
         cellTongCong.setCellStyle(style2);
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 1));
 
-        ArrayList<HoaDon> listHoaDon = hoaDon_dao.getDSHDTheoNam(cb_sumNam.getValue());
+        List<HoaDon> listHoaDon = null;
+        try {
+            listHoaDon = hoaDonService.getDSHDTheoNam(cb_sumNam.getValue());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         double tongDoanhThu = 0;
         int currentRowIndex = 2;
 

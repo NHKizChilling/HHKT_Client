@@ -2,7 +2,6 @@ package controller;
 
 import com.itextpdf.text.DocumentException;
 import com.jfoenix.controls.JFXButton;
-import dao.*;
 import entity.*;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -11,9 +10,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import service.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -99,27 +103,42 @@ public class HDDoiTraVeController implements Initializable {
     @FXML
     private Label lblThanhTien;
 
-    private final CT_LichTrinh_DAO ctl_dao = new CT_LichTrinh_DAO();
-    private final HoaDon_DAO hd_dao = new HoaDon_DAO();
-    private final KhuyenMai_DAO km_dao = new KhuyenMai_DAO();
-    private final CT_HoaDon_DAO cthd_dao = new CT_HoaDon_DAO();
     private double tongTien = 0;
-    private final Ve_DAO ve_dao = new Ve_DAO();
     private HoaDon hd;
+
+    private CT_HoaDonService ctHoaDonService;
+    private HoaDonService hoaDonService;
+    private KhuyenMaiService khuyenMaiService;
+    private CT_LichTrinhService ctLichTrinhService;
+    private VeService veService;
+    private LichTrinhService lichTrinhService;
+    private GaService gaService;
+    private ChoNgoiService choNgoiService;
+    private ToaService toaService;
+    private LoaiVeService loaiVeService;
+    private LoaiToaService loaiToaService;
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // TODO
+        initService();
+
         NumberFormat df = DecimalFormat.getCurrencyInstance(Locale.of("vi", "VN"));
         NhanVien nhanVien = getData.nv;
-        txtMaNV.setText(nhanVien.getMaNhanVien());
-        txtTenNV.setText(nhanVien.getTenNhanVien());
-        txtMaHD.setText(getData.hd.getMaHoaDon());
+        txtMaNV.setText(nhanVien.getMaNV());
+        txtTenNV.setText(nhanVien.getTenNV());
+        txtMaHD.setText(getData.hd.getMaHD());
         txtNgayLapHD.setText(getData.hd.getNgayLapHoaDon().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         txtKH.setText(getData.kh.getTenKH());
         txtSDT.setText(getData.kh.getSdt());
         hd = getData.hd;
-        hd.setKhuyenMai(km_dao.getKMGiamCaoNhat());
+        try {
+            hd.setKhuyenMai(khuyenMaiService.getKMGiamCaoNhat());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         Ve ve_doi = getData.dsve.getFirst();
         ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve_doi);
 
@@ -130,23 +149,53 @@ public class HDDoiTraVeController implements Initializable {
         colSTT.setCellValueFactory(column -> new SimpleIntegerProperty(tbCTHD.getItems().indexOf(column.getValue()) + 1).asObject());
 
         colTTVe.setCellValueFactory(param -> {
-            LichTrinh lt1 = new LichTrinh_DAO().getLichTrinhTheoID(ve_doi.getCtlt().getLichTrinh().getMaLichTrinh());
+            LichTrinh lt1 = null;
+            try {
+                lt1 = lichTrinhService.getLichTrinhTheoID(ve_doi.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(  lt1.getChuyenTau().getSoHieutau()+ " - " + new Ga_DAO().getGaTheoMaGa(lt1.getGaDi().getMaGa()).getTenGa() + " - " + new Ga_DAO().getGaTheoMaGa(lt1.getGaDen().getMaGa()).getTenGa() + "\n" + formatter1.format(lt1.getThoiGianKhoiHanh()) + " - " + formatter1.format(lt1.getThoiGianDuKienDen()));
+            try {
+                return new SimpleStringProperty(  lt1.getSoHieuTau().getSoHieuTau()+ " - "
+                        + gaService.getGaTheoMaGa(lt1.getGaDi().getMaGa()).getTenGa() + " - "
+                        + gaService.getGaTheoMaGa(lt1.getGaDen().getMaGa()).getTenGa() + "\n"
+                        + formatter1.format(lt1.getThoiGianKhoiHanh()) + " - " + formatter1.format(lt1.getThoiGianDuKienDen()));
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         colLoaiCho.setCellValueFactory(param -> {
-            ChoNgoi cn1 = new ChoNgoi_DAO().getChoNgoiTheoMa(ve_doi.getCtlt().getChoNgoi().getMaChoNgoi());
-            return new SimpleStringProperty(new LoaiToa_DAO().getLoaiToaTheoMa(new Toa_DAO().getToaTheoID(cn1.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+            ChoNgoi cn1 = null;
+            try {
+                cn1 = choNgoiService.getChoNgoiTheoMa(ve_doi.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                return new SimpleStringProperty(loaiToaService.getLoaiToaTheoMa(toaService.getToaTheoID(cn1.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         colLoaiVe.setCellValueFactory(param -> {
-            LoaiVe_DAO lv_dao = new LoaiVe_DAO();
-            return new SimpleStringProperty(lv_dao.getLoaiVeTheoMa(ve_doi.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+            try {
+                return new SimpleStringProperty(loaiVeService.getLoaiVeTheoMa(ve_doi.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         colGiaVe.setCellValueFactory(param -> {
-            ChiTietLichTrinh ctlt = new CT_LichTrinh_DAO().getCTLTTheoCN(ve_doi.getCtlt().getLichTrinh().getMaLichTrinh(), ve_doi.getCtlt().getChoNgoi().getMaChoNgoi());
+            ChiTietLichTrinh ctlt = null;
+            try {
+                ctlt = ctLichTrinhService.getCTLTTheoCN(ve_doi.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(),
+                        ve_doi.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(df.format(ctlt.getGiaCho()));
         });
 
@@ -156,9 +205,19 @@ public class HDDoiTraVeController implements Initializable {
 
         tbCTHD.setItems(FXCollections.observableArrayList(Collections.singletonList(cthd)));
 
-        ChiTietHoaDon cthd_old = cthd_dao.getCT_HoaDonTheoMaVe(ve_doi.getMaVe());
+        ChiTietHoaDon cthd_old = null;
+        try {
+            cthd_old = ctHoaDonService.getCT_HoaDonTheoMaVe(ve_doi.getMaVe());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         hd.tinhTongGiamGia(new ArrayList<>(List.of(cthd)));
-        KhuyenMai km = km_dao.getKMTheoMa(hd.getKhuyenMai().getMaKM());
+        KhuyenMai km = null;
+        try {
+            km = khuyenMaiService.getKMTheoMa(hd.getKhuyenMai().getMaKM());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         double gia = Math.round((cthd.getGiaVe() - cthd_old.getGiaVe()) / 1000) * 1000;
         tongTien = (gia > 0 ? gia * (1 - km.getMucKM()) : gia) + 10000;
         double giamGia = gia > 0 ? gia * hd.getKhuyenMai().getMucKM() : 0 + cthd.getGiaGiam();
@@ -174,7 +233,11 @@ public class HDDoiTraVeController implements Initializable {
             txtTienTra.setDisable(false);
         }
 
-        hd = new HoaDon(hd.getMaHoaDon(), getData.nv, getData.kh, LocalDateTime.now(), km_dao.getKMGiamCaoNhat(), tongTien, giamGia,false);
+        try {
+            hd = new HoaDon(hd.getMaHD(), getData.nv, getData.kh, LocalDateTime.now(), khuyenMaiService.getKMGiamCaoNhat(), tongTien, giamGia,false);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
         if (!txtThanhTien.getText().isEmpty() && txtTienKH.getText() != null) {
             double t = hd.getTongTien()/1000;
@@ -244,19 +307,23 @@ public class HDDoiTraVeController implements Initializable {
             } else {
                 hd.setTrangThai(true);
                 getData.hd = hd;
-                if(hd_dao.update(hd)) {
-                    ctl_dao.updateCTLT(ve_dao.getVeTheoID(ve_doi.getMaVe()).getCtlt(), true);
-                    ctl_dao.updateCTLT(ve_doi.getCtlt(), false);
-                    ve_dao.update(ve_doi);
-                    getData.dsve.clear();
-                    getData.dsve.add(ve_doi);
-                    cthd_dao.create(cthd);
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText("Thanh toán thành công");
-                    btnThanhToan.setDisable(true);
-                    btnInHD.setDisable(false);
-                    alert.showAndWait();
+                try {
+                    if(hoaDonService.update(hd)) {
+                        ctLichTrinhService.updateCTLT(veService.getVeTheoID(ve_doi.getMaVe()).getChiTietLichTrinh(), true);
+                        ctLichTrinhService.updateCTLT(ve_doi.getChiTietLichTrinh(), false);
+                        veService.update(ve_doi);
+                        getData.dsve.clear();
+                        getData.dsve.add(ve_doi);
+                        ctHoaDonService.create(cthd);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Thông báo");
+                        alert.setHeaderText("Thanh toán thành công");
+                        btnThanhToan.setDisable(true);
+                        btnInHD.setDisable(false);
+                        alert.showAndWait();
+                    }
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -295,6 +362,25 @@ public class HDDoiTraVeController implements Initializable {
             btnGia2.setText(df.format(Math.max(tienKH * 10000L, Math.ceil(tongTien / 10000) * 10000)));
             btnGia3.setText(df.format(Math.max(tienKH * 100000L, Math.ceil(tongTien / 100000) * 100000)));
             btnGia4.setText(df.format(Math.max(tienKH * 1000000L, Math.ceil(tongTien / 1000000) * 1000000)));
+        }
+    }
+
+    private void initService() {
+        try {
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/VeService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+            khuyenMaiService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/KhuyenMaiService");
+            ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+            choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
+            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+            loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaiToaService");
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
         }
     }
 }

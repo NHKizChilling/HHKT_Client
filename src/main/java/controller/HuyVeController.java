@@ -5,7 +5,6 @@ import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import com.jfoenix.controls.JFXButton;
-import dao.*;
 import entity.*;
 import gui.TrangChu_GUI;
 import javafx.application.Platform;
@@ -25,9 +24,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import service.*;
 
 import java.awt.image.BufferedImage;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -116,13 +120,14 @@ public class HuyVeController implements Initializable {
     private Label lbl_thongBao2;
 
     // Gọi DAO
-    private Ve_DAO ve_dao;
-    private KhachHang_DAO hanhKhach_dao;
-    private CT_HoaDon_DAO ct_hoaDon_dao;
-    private HoaDon_DAO hoaDon_dao;
-    private LichTrinh_DAO lichTrinh_dao;
-    private LoaiVe_DAO loaiVe_dao;
     private HoaDon hoaDon;
+    private VeService veService;
+    private KhachHangService khachHangService;
+    private HoaDonService hoaDonService;
+    private CT_HoaDonService ctHoaDonService;
+    private LichTrinhService lichTrinhService;
+    private LoaiVeService loaiVeService;
+    private GaService gaService;
 
     private NumberFormat currencyVN = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));
 
@@ -131,7 +136,7 @@ public class HuyVeController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        initDAO();
+        initService();
 
 
         cb_search.getItems().addAll("Mã hóa đơn", "Mã vé");
@@ -208,24 +213,52 @@ public class HuyVeController implements Initializable {
             }
             ArrayList<Ve> listVe = new ArrayList<>();
             if (cb_search.getValue().equals("Mã vé")) {
-                Ve ve = ve_dao.getVeTheoID(key);
-                ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(key);
+                Ve ve = null;
+                try {
+                    ve = veService.getVeTheoID(key);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
+                ChiTietHoaDon ctHoaDon = null;
+                try {
+                    ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(key);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (ctHoaDon == null) {
                     txt_search.clear();
                     txt_search.setPromptText("Mã vé không tồn tại");
                     txt_search.requestFocus();
                     return;
                 }
-                hoaDon = hoaDon_dao.getHoaDonTheoMa(ctHoaDon.getHoaDon().getMaHoaDon());
+                try {
+                    hoaDon = hoaDonService.getHoaDonTheoMa(ctHoaDon.getHoaDon().getMaHD());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (ve != null) {
                     listVe.add(ve);
                 }
             } else {
-                hoaDon = hoaDon_dao.getHoaDonTheoMa(key);
+                try {
+                    hoaDon = hoaDonService.getHoaDonTheoMa(key);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (hoaDon != null) {
-                    ArrayList<ChiTietHoaDon> listCTHD = ct_hoaDon_dao.getCT_HoaDon(hoaDon.getMaHoaDon());
+                    List<ChiTietHoaDon> listCTHD = null;
+                    try {
+                        listCTHD = ctHoaDonService.getCT_HoaDon(hoaDon.getMaHD());
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     for (ChiTietHoaDon ct : listCTHD) {
-                        Ve ve = ve_dao.getVeTheoID(ct.getVe().getMaVe());
+                        Ve ve = null;
+                        try {
+                            ve = veService.getVeTheoID(ct.getVe().getMaVe());
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         listVe.add(ve);
                     }
                 }
@@ -237,7 +270,12 @@ public class HuyVeController implements Initializable {
             } else {
                 renderTable(listVe);
                 lbl_thongBao.setText("");
-                KhachHang kh = hanhKhach_dao.getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH());
+                KhachHang kh = null;
+                try {
+                    kh = khachHangService.getKhachHangTheoMaKH(hoaDon.getKhachHang().getMaKH());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 txt_tenNguoiDat.setText(kh.getTenKH());
                 txt_email.setText(kh.getEmail());
                 txt_sdt.setText(kh.getSdt());
@@ -253,7 +291,7 @@ public class HuyVeController implements Initializable {
         col_maVe.setCellValueFactory(new PropertyValueFactory<>("maVe"));
 
         col_thongTinHK.setCellValueFactory(p -> {
-            String tenHK = p.getValue().getTenHanhKhach();
+            String tenHK = p.getValue().getTenKH();
             String cccd = p.getValue().getSoCCCD();
             LocalDate ngaySinh = p.getValue().getNgaySinh();
             String s;
@@ -269,11 +307,27 @@ public class HuyVeController implements Initializable {
         });
 
         col_thongTinVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            LoaiVe lv = loaiVe_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
+            Ve ve = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            LoaiVe lv = null;
+            try {
+                lv = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+
+            LichTrinh lt = null;
+            try {
+                lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(lt.getChuyenTau().getSoHieutau() + " - " + lt.getGaDi().getMaGa() + " - " + lt.getGaDen().getMaGa() + "\n" +
+            return new SimpleStringProperty(lt.getSoHieuTau().getSoHieuTau() + " - " + lt.getGaDi().getMaGa() + " - " + lt.getGaDen().getMaGa() + "\n" +
                     lt.getThoiGianKhoiHanh().format(formatter) + "\n" +
                     lv.getTenLoaiVe());
         });
@@ -281,7 +335,12 @@ public class HuyVeController implements Initializable {
         col_tinhTrangVe.setCellValueFactory(new PropertyValueFactory<>("tinhTrangVe"));
 
         col_giaVe.setCellValueFactory(p -> {
-            ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(p.getValue().getMaVe());
+            ChiTietHoaDon ctHoaDon = null;
+            try {
+                ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(String.valueOf(ctHoaDon.getGiaVe()));
         });
 
@@ -321,7 +380,12 @@ public class HuyVeController implements Initializable {
             ArrayList<Ve> dsVeDaDoi = new ArrayList<>(); // Danh sách vé đã đổi
 
             // Lấy thời gian khởi hành của lịch trình
-            LichTrinh lt = lichTrinh_dao.getLichTrinhTheoID(selectedVe.getFirst().getCtlt().getLichTrinh().getMaLichTrinh());
+            LichTrinh lt = null;
+            try {
+                lt = lichTrinhService.getLichTrinhTheoID(selectedVe.getFirst().getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             LocalDateTime thoiGianKhoiHanh = lt.getThoiGianKhoiHanh();
 
             // Kiểm tra điều kiện hủy vé
@@ -362,7 +426,12 @@ public class HuyVeController implements Initializable {
 
             // Tính tổng tiền vé và lệ phí
             for (Ve ve : dsVeHuy) { // Duyệt qua danh sách vé cần hủy đã lọc các vé đã đổi ra
-                ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
+                ChiTietHoaDon ctHoaDon = null;
+                try {
+                    ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 tongTienVe += Math.round(ctHoaDon.getGiaVe() / 1000) * 1000;
                 double lePhi = Math.round((ctHoaDon.getGiaVe() * phanTram) / 1000) * 1000;
                 tongLePhi += lePhi;
@@ -370,7 +439,12 @@ public class HuyVeController implements Initializable {
             }
 
             for (Ve ve : dsVeDaDoi) {
-                ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(ve.getMaVe());
+                ChiTietHoaDon ctHoaDon = null;
+                try {
+                    ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 tongTienVe += Math.round(ctHoaDon.getGiaVe() / 1000) * 1000;
                 double lePhi = Math.round((ctHoaDon.getGiaVe() * 0.3) / 1000.0) * 1000;
                 tongLePhi += lePhi;
@@ -421,9 +495,18 @@ public class HuyVeController implements Initializable {
                     alert.setContentText("Xác nhận thoát?");
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.isPresent() && result.get() == ButtonType.OK) {
-                        HoaDon hoaDon = hoaDon_dao.getHoaDonVuaTao();
+                        HoaDon hoaDon = null;
+                        try {
+                            hoaDon = hoaDonService.getHoaDonVuaTao();
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
-                            hoaDon_dao.delete(hoaDon);
+                            try {
+                                hoaDonService.delete(hoaDon);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                         hdHuyVeStage.close();
                         lamMoi();
@@ -445,7 +528,7 @@ public class HuyVeController implements Initializable {
 
         // col thông tin hành khách chứa TenHK, cccd, sdt
         col_thongTinHK.setCellValueFactory(p -> {
-            String tenHK = p.getValue().getTenHanhKhach();
+            String tenHK = p.getValue().getTenKH();
             String cccd = p.getValue().getSoCCCD();
             String ngaySinh = p.getValue().getNgaySinh() != null ? p.getValue().getNgaySinh().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : null;
             String s;
@@ -460,14 +543,33 @@ public class HuyVeController implements Initializable {
         });
 
         col_thongTinVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            LoaiVe lv = loaiVe_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
+            Ve ve = null;
+            try {
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            LoaiVe lv = null;
+            try {
+                lv = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            LichTrinh lt = null;
+            try {
+                lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(new Ga_DAO().getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " +
-                    new Ga_DAO().getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + " \n" +
-                    "Giờ khởi hành: \n" + lt.getThoiGianKhoiHanh().format(formatter) + " \n" +
-                    lv.getTenLoaiVe());
+            try {
+                return new SimpleStringProperty(gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " +
+                        gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + " \n" +
+                        "Giờ khởi hành: \n" + lt.getThoiGianKhoiHanh().format(formatter) + " \n" +
+                        lv.getTenLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         Map<String, String> map = new HashMap<>();
@@ -478,7 +580,12 @@ public class HuyVeController implements Initializable {
         col_tinhTrangVe.setCellValueFactory(p -> new SimpleStringProperty(map.get(p.getValue().getTinhTrangVe())));
 
         col_giaVe.setCellValueFactory(p -> {
-            ChiTietHoaDon ctHoaDon = ct_hoaDon_dao.getCT_HoaDonTheoMaVe(p.getValue().getMaVe());
+            ChiTietHoaDon ctHoaDon = null;
+            try {
+                ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(currencyVN.format(ctHoaDon.getGiaVe()));
         });
 
@@ -530,13 +637,20 @@ public class HuyVeController implements Initializable {
         }
     }
 
-    private void initDAO() {
-        ve_dao = new Ve_DAO();
-        hanhKhach_dao = new KhachHang_DAO();
-        loaiVe_dao = new LoaiVe_DAO();
-        ct_hoaDon_dao = new CT_HoaDon_DAO();
-        hoaDon_dao = new HoaDon_DAO();
-        lichTrinh_dao = new LichTrinh_DAO();
+    private void initService() {
+            try {
+                veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+                ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+                lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+                loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+                hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+                khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+                gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+            } catch (NotBoundException | MalformedURLException | RemoteException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to initialize services", e);
+            }
+
     }
 
     private void lamMoi() {
