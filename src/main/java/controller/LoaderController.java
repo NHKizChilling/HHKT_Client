@@ -26,7 +26,5 @@ public class LoaderController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         double progress = 0.0;
         progressBar.setProgress(progress);
-
-
     }
 }

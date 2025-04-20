@@ -10,6 +10,7 @@ import entity.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /*
  * @description:
@@ -26,7 +27,7 @@ public class getData {
     public static ArrayList<Ve> dsve;
     public static ArrayList<ChiTietLichTrinh> dsctlt;
     public static ArrayList<ChiTietLichTrinh> dsctltkh;
-    public static ArrayList<ChiTietHoaDon> dscthd;
+    public static List<ChiTietHoaDon> dscthd;
     public static LocalDateTime gioMoCa;
     public static HashMap<String, Double> mapLePhi;
     public static double tienDauCa;

@@ -2,15 +2,20 @@ package controller;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXCheckBox;
-import dao.TaiKhoan_DAO;
 import entity.NhanVien;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import lombok.SneakyThrows;
+import service.*;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.ResourceBundle;
 
 public class DoiMatKhauController implements Initializable {
@@ -48,13 +53,15 @@ public class DoiMatKhauController implements Initializable {
     @FXML
     private PasswordField pwdOld;
 
-    private final TaiKhoan_DAO dao = new TaiKhoan_DAO();
+    TaiKhoanService tk_dao;
 
+    @SneakyThrows
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        initDao();
         NhanVien nhanVien = getData.nv;
-        lblMaNV.setText(nhanVien.getMaNhanVien());
-        lblHoNV.setText(nhanVien.getTenNhanVien());
+        lblMaNV.setText(nhanVien.getMaNV());
+        lblHoNV.setText(nhanVien.getTenNV());
         lblCCCD.setText(nhanVien.getSoCCCD());
         lblSDT.setText(nhanVien.getSdt());
         lblEmail.setText(nhanVien.getEmail());
@@ -133,38 +140,42 @@ public class DoiMatKhauController implements Initializable {
                 chkConfirm.requestFocus();
                 return;
             }
-            if (oldPass.equals(dao.getTaiKhoanTheoMaNV(nhanVien.getMaNhanVien()).getMatKhau())) {
-                if (newPass.equals(confirmPass)) {
-                    if (dao.doiMatKhau(nhanVien.getMaNhanVien(), newPass)) {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Thành công");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Đổi mật khẩu thành công");
-                        alert.showAndWait();
-                        pwdOld.clear();
-                        pwdNew.clear();
-                        pwdNewConfirm.clear();
-                        chkConfirm.setSelected(false);
+            try {
+                if (oldPass.equals(tk_dao.getTaiKhoanTheoMaNV(nhanVien.getMaNV()).getMatKhau())) {
+                    if (newPass.equals(confirmPass)) {
+                        if (tk_dao.doiMatKhau(nhanVien.getMaNV(), newPass)) {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Thành công");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Đổi mật khẩu thành công");
+                            alert.showAndWait();
+                            pwdOld.clear();
+                            pwdNew.clear();
+                            pwdNewConfirm.clear();
+                            chkConfirm.setSelected(false);
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Lỗi");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Đổi mật khẩu thất bại");
+                            alert.showAndWait();
+                        }
                     } else {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Lỗi");
                         alert.setHeaderText(null);
-                        alert.setContentText("Đổi mật khẩu thất bại");
+                        alert.setContentText("Mật khẩu mới không trùng khớp");
                         alert.showAndWait();
                     }
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Lỗi");
                     alert.setHeaderText(null);
-                    alert.setContentText("Mật khẩu mới không trùng khớp");
+                    alert.setContentText("Mật khẩu cũ không đúng");
                     alert.showAndWait();
                 }
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText(null);
-                alert.setContentText("Mật khẩu cũ không đúng");
-                alert.showAndWait();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
@@ -174,5 +185,9 @@ public class DoiMatKhauController implements Initializable {
             pwdNewConfirm.clear();
             chkConfirm.setSelected(false);
         });
+    }
+
+    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
+        tk_dao = (TaiKhoanService) Naming.lookup("rmi://localhost:9999/TaiKhoanService");
     }
 }

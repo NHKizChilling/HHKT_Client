@@ -188,8 +188,23 @@
           <scope>system</scope>
           <systemPath>${project.basedir}/libs/HHKT_Station.jar</systemPath>
       </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>20.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>HHKT_Client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
-  </dependencies>
+    </dependencies>
 
   <build>
     <plugins>

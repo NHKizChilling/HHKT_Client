@@ -5,15 +5,14 @@ import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import com.jfoenix.controls.JFXButton;
-import dao.*;
+import javafx.embed.swing.SwingFXUtils;
 import entity.*;
-import gui.TrangChu_GUI;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
+import gui.TrangChu_GUI;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -33,10 +32,16 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import lombok.Generated;
+import service.*;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -135,16 +140,17 @@ public class DoiVeController implements Initializable {
     private JFXButton btn_doiVe;
 
 
-    LichTrinh_DAO lichTrinh_dao;
-    Ve_DAO ve_dao;
-    Ga_DAO ga_dao;
-    CT_LichTrinh_DAO ctlt_dao;
-    CT_HoaDon_DAO cthd_dao;
-    HoaDon_DAO hd_dao;
-    Ga_DAO ga_DAO;
-    Toa_DAO toa_dao;
-    LoaiToa_DAO ltoa_dao;
-    ChoNgoi_DAO cn_dao;
+    VeService ve_dao;
+    GaService ga_dao;
+    CT_LichTrinhService ctlt_dao;
+    CT_HoaDonService cthd_dao;
+    HoaDonService hd_dao;
+    ToaService toa_dao;
+    LoaiToaService ltoa_dao;
+    ChoNgoiService cn_dao;
+    LoaiVeService lv_dao;
+    LichTrinhService lichTrinh_dao;
+    KhachHangService kh_dao;
 
     private Ve ve;
     private String chosedId;
@@ -152,6 +158,10 @@ public class DoiVeController implements Initializable {
 
     NumberFormat moneyFormat = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));
 
+    public DoiVeController() throws MalformedURLException, NotBoundException, RemoteException {
+    }
+
+    @lombok.SneakyThrows
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // TODO
@@ -247,19 +257,36 @@ public class DoiVeController implements Initializable {
                 alert.show();
                 return;
             }
-            ArrayList<Ve> listVe = new ArrayList<>();
+            List<Ve> listVe = new ArrayList<>();
             if (cb_search.getValue().equalsIgnoreCase("Mã khách hàng")) {
-                listVe = ve_dao.getDSVeTheoMaKH(search);
+                try {
+                    listVe = ve_dao.getDSVeTheoMaKH(search);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
             } else if (cb_search.getValue().equalsIgnoreCase("Mã vé")) {
-                Ve ve = ve_dao.getVeTheoID(search);
+                Ve ve = null;
+                try {
+                    ve = ve_dao.getVeTheoID(search);
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (ve != null) {
                     listVe.add(ve);
                 }
             } else if (cb_search.getValue().equalsIgnoreCase("Mã hóa đơn")) {
-                ArrayList<Ve> finalListVe = listVe;
-                cthd_dao.getCT_HoaDon(search).forEach(cthd -> {
-                    finalListVe.add(ve_dao.getVeTheoID(cthd.getVe().getMaVe()));
-                });
+                List<Ve> finalListVe = listVe;
+                try {
+                    cthd_dao.getCT_HoaDon(search).forEach(cthd -> {
+                        try {
+                            finalListVe.add(ve_dao.getVeTheoID(cthd.getVe().getMaVe()));
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
             if (listVe.isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -281,11 +308,25 @@ public class DoiVeController implements Initializable {
                 ve = tbl_thongTinVe.getSelectionModel().getSelectedItem();
                 if (ve != null) {
                     String maVe = ve.getMaVe();
-                    ChiTietHoaDon cthd = cthd_dao.getCT_HoaDonTheoMaVe(maVe);
-                    HoaDon hd = hd_dao.getHoaDonTheoMa(cthd.getHoaDon().getMaHoaDon());
+                    ChiTietHoaDon cthd = null;
+                    try {
+                        cthd = cthd_dao.getCT_HoaDonTheoMaVe(maVe);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
+                    try {
+                        HoaDon hd = hd_dao.getHoaDonTheoMa(cthd.getHoaDon().getMaHD());
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
 
-                    String maLichTrinh = ve.getCtlt().getLichTrinh().getMaLichTrinh();
-                    LichTrinh lt = lichTrinh_dao.getLichTrinhTheoID(maLichTrinh);
+                    String maLichTrinh = ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh();
+                    LichTrinh lt = null;
+                    try {
+                        lt = lichTrinh_dao.getLichTrinhTheoID(maLichTrinh);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
                     LocalDateTime gioTauChay = lt.getThoiGianKhoiHanh();
                     LocalDateTime now = LocalDateTime.now();
 
@@ -310,9 +351,24 @@ public class DoiVeController implements Initializable {
                 label_thongBao.setText("Vé không thể đổi");
                 return;
             }
-            LichTrinh lt = lichTrinh_dao.getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
-            String tenGaDi = ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
-            String tenGaDen = ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
+            LichTrinh lt = null;
+            try {
+                lt = lichTrinh_dao.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            String tenGaDi = null;
+            try {
+                tenGaDi = ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            String tenGaDen = null;
+            try {
+                tenGaDen = ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
 
             cb_gaDi.setValue(tenGaDi);
             cb_gaDen.setValue(tenGaDen);
@@ -328,8 +384,18 @@ public class DoiVeController implements Initializable {
             String gaDi = cb_gaDi.getValue();
             String gaDen = cb_gaDen.getValue();
 
-            String maGaDi = ga_dao.getGaTheoTenGa(gaDi).getMaGa();
-            String maGaDen = ga_dao.getGaTheoTenGa(gaDen).getMaGa();
+            String maGaDi = null;
+            try {
+                maGaDi = ga_dao.getGaTheoTenGa(gaDi).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            String maGaDen = null;
+            try {
+                maGaDen = ga_dao.getGaTheoTenGa(gaDen).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
 
             if (dp_ngayKhoiHanh.getValue() == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -340,7 +406,12 @@ public class DoiVeController implements Initializable {
                 return;
             }
 
-            ArrayList<LichTrinh> listLT = lichTrinh_dao.traCuuDSLichTrinh(maGaDi, maGaDen, dp_ngayKhoiHanh.getValue());
+            List<LichTrinh> listLT = null;
+            try {
+                listLT = lichTrinh_dao.traCuuDSLichTrinh(maGaDi, maGaDen, dp_ngayKhoiHanh.getValue());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             if (listLT.isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Thông báo");
@@ -365,27 +436,39 @@ public class DoiVeController implements Initializable {
             //lấy thông tin vé cũ
             KhachHang kh = ve.getKhachHang();
             LoaiVe lv = ve.getLoaiVe();
-            String tenHK = ve.getTenHanhKhach();
+            String tenHK = ve.getTenKH();
             String soCCCD = ve.getSoCCCD();
             LocalDate dob = ve.getNgaySinh();
             boolean khuHoiMoi = ve.isKhuHoi();
 
-
             HoaDon hd = new HoaDon("temp", getData.nv, kh, LocalDateTime.now(), new KhuyenMai(null), false);
-            Ve veMoi = new Ve(ve.getMaVe(), kh, ctlt, new LoaiVe_DAO().getLoaiVeTheoMa(lv.getMaLoaiVe()), tenHK, soCCCD, dob, "DaDoi", khuHoiMoi);
-            if (hd_dao.createTempInvoice(hd)) {
-                //get hóa đơn vừa tạo
-                getData.hd = hd_dao.getHoaDonVuaTao();
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText(null);
-                alert.setContentText("Tạo hóa đơn thất bại");
-                alert.show();
-                return;
+            Ve veMoi = null;
+            try {
+                veMoi = new Ve(ve.getMaVe(), kh, ctlt, lv_dao.getLoaiVeTheoMa(lv.getMaLoaiVe()), tenHK, soCCCD, dob, "DaDoi", khuHoiMoi);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            try {
+                if (hd_dao.createTempInvoice(hd)) {
+                    //get hóa đơn vừa tạo
+                    getData.hd = hd_dao.getHoaDonVuaTao();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Tạo hóa đơn thất bại");
+                    alert.show();
+                    return;
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
 
-            getData.kh = new KhachHang_DAO().getKhachHangTheoMaKH(kh.getMaKH());
+            try {
+                getData.kh = kh_dao.getKhachHangTheoMaKH(kh.getMaKH());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             getData.dsve = new ArrayList<>(List.of(veMoi));
             FXMLLoader loader = new FXMLLoader(TrangChu_GUI.class.getResource("hd_doitrave.fxml"));
             try {
@@ -404,9 +487,18 @@ public class DoiVeController implements Initializable {
                     alert.setContentText("Xác nhận thoát?");
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.isPresent() && result.get() == ButtonType.OK) {
-                        HoaDon hoaDon = hd_dao.getHoaDonVuaTao();
+                        HoaDon hoaDon = null;
+                        try {
+                            hoaDon = hd_dao.getHoaDonVuaTao();
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
-                            hd_dao.delete(hoaDon);
+                            try {
+                                hd_dao.delete(hoaDon);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                         stage.close();
                         lamMoi();
@@ -415,9 +507,18 @@ public class DoiVeController implements Initializable {
 
                 Button btnBack = (Button) pane.lookup("#btnBackBanVe");
                 btnBack.setOnMouseClicked(e1 -> {
-                    HoaDon hoaDon = hd_dao.getHoaDonVuaTao();
+                    HoaDon hoaDon = null;
+                    try {
+                        hoaDon = hd_dao.getHoaDonVuaTao();
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     if (!hoaDon.isTrangThai()) {
-                        hd_dao.delete(hoaDon);
+                        try {
+                            hd_dao.delete(hoaDon);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     getData.hd = null;
                     getData.dsctlt = null;
@@ -435,7 +536,7 @@ public class DoiVeController implements Initializable {
         lblGia.setText("Giá: " + moneyFormat.format(0));
     }
 
-    public void renderTableVe(ArrayList<Ve> listVe) {
+    public void renderTableVe(List<Ve> listVe) {
         // TODO
         listVe.removeIf(ve -> ve.getTinhTrangVe().equalsIgnoreCase("DaDoi") || ve.getTinhTrangVe().equalsIgnoreCase("DaHuy"));
         ObservableList<Ve> data = FXCollections.observableArrayList(listVe);
@@ -443,15 +544,44 @@ public class DoiVeController implements Initializable {
         col_maVe.setCellValueFactory(new PropertyValueFactory<>("maVe"));
         col_maKH.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getKhachHang().getMaKH()));
         col_thongTinVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            LichTrinh lt = new LichTrinh_DAO().getLichTrinhTheoID(ve.getCtlt().getLichTrinh().getMaLichTrinh());
+            Ve ve = null;
+            try {
+                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            LichTrinh lt = null;
+            try {
+                lt = lichTrinh_dao.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(  lt.getChuyenTau().getSoHieutau()+ " - " + new Ga_DAO().getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + new Ga_DAO().getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
+            try {
+                return new SimpleStringProperty(  lt.getSoHieuTau() + " - " +ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
         col_loaiCho.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            ChoNgoi cn = new ChoNgoi_DAO().getChoNgoiTheoMa(ve.getCtlt().getChoNgoi().getMaChoNgoi());
-            return new SimpleStringProperty(new LoaiToa_DAO().getLoaiToaTheoMa(new Toa_DAO().getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+            Ve ve = null;
+            try {
+                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            ChoNgoi cn = null;
+            try {
+                cn = cn_dao.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                return new SimpleStringProperty(ltoa_dao.getLoaiToaTheoMa(toa_dao.getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         Map<String, String> mapTinhTrangVe = new HashMap<>();
@@ -460,30 +590,33 @@ public class DoiVeController implements Initializable {
         mapTinhTrangVe.put("DaDoi", "Đã đổi");
 
         col_tinhTrangVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            Ve ve = null;
+            try {
+                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty(mapTinhTrangVe.get(ve.getTinhTrangVe()));
         });
 
 
         col_loaiVe.setCellValueFactory(p -> {
-            Ve ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
-            return new SimpleStringProperty(new LoaiVe_DAO().getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+            Ve ve = null;
+            try {
+                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                return new SimpleStringProperty(lv_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
         col_tenHK.setCellValueFactory(new PropertyValueFactory<>("tenHanhKhach"));
     }
 
-    public void initDao() {
-        lichTrinh_dao = new LichTrinh_DAO();
-        ve_dao = new Ve_DAO();
-        ga_dao = new Ga_DAO();
-        ctlt_dao = new CT_LichTrinh_DAO();
-        cthd_dao = new CT_HoaDon_DAO();
-        hd_dao = new HoaDon_DAO();
-        ga_DAO = new Ga_DAO();
-        toa_dao = new Toa_DAO();
-        ltoa_dao = new LoaiToa_DAO();
-        cn_dao = new ChoNgoi_DAO();
-    }
+
 
     private String decodeBarcode(BufferedImage image){
         LuminanceSource source = new BufferedImageLuminanceSource(image);
@@ -527,7 +660,7 @@ public class DoiVeController implements Initializable {
         cb_gaDen.setValue(null);
     }
 
-    private void showTauTheoLT(ArrayList<LichTrinh> list) {
+    private void showTauTheoLT(List<LichTrinh> list) {
         paneTau.getChildren().clear();
 
         for (LichTrinh lt : list) {
@@ -539,7 +672,7 @@ public class DoiVeController implements Initializable {
                 Label lblTGDen = (Label) pTau.lookup("#lblTGDen");
                 ImageView imgTau = (ImageView) pTau.lookup("#imgTau");
                 imgTau.setId(lt.getMaLichTrinh());
-                lblSoHieuTau.setText(lt.getChuyenTau().getSoHieutau());
+                lblSoHieuTau.setText(String.valueOf(lt.getSoHieuTau()));
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM HH:mm");
                 lblTGKH.setText(lt.getThoiGianKhoiHanh().format(formatter));
                 lblTGDen.setText(lt.getThoiGianDuKienDen().format(formatter));
@@ -555,7 +688,11 @@ public class DoiVeController implements Initializable {
                             imageView.setEffect(ca);
                         }
                     }
-                    showToaTheoLT(lt);
+                    try {
+                        showToaTheoLT(lt);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
                 paneTau.getChildren().add(pTau);
             } catch (IOException ex) {
@@ -572,11 +709,11 @@ public class DoiVeController implements Initializable {
         }
     }
 
-    private void showToaTheoLT(LichTrinh lt) {
+    private void showToaTheoLT(LichTrinh lt) throws RemoteException {
         chosedId = null;
         grTrain.getChildren().clear();
-        ArrayList<Toa> dstoa = toa_dao.getAllToaTheoChuyenTau(lt.getChuyenTau().getSoHieutau());
-        dstoa.sort(Comparator.comparing(Toa::getSoSTToa).reversed());
+        List<Toa> dstoa = toa_dao.getAllToaTheoChuyenTau(String.valueOf(lt.getSoHieuTau()));
+        dstoa.sort(Comparator.comparing(Toa::getSttToa).reversed());
         GridPane gridPane = new GridPane();
         paneToa.setCenter(gridPane);
         gridPane.setAlignment(Pos.CENTER);
@@ -607,7 +744,11 @@ public class DoiVeController implements Initializable {
             });
 
             imageView.setOnMouseClicked(e -> {
-                lblToa.setText("Toa " + toa.getSoSTToa() + ": " + ltoa_dao.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                try {
+                    lblToa.setText("Toa " + toa.getSttToa() + ": " + ltoa_dao.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 paneImg.setStyle("-fx-background-color: lightgreen;-fx-background-radius: 5;");
                 //đổi màu các imageView còn lại
                 if (chosedId != null) {
@@ -616,7 +757,12 @@ public class DoiVeController implements Initializable {
                 }
                 chosedId = imageView.getId();
                 gridPane.getChildren().clear();
-                ArrayList<ChoNgoi> dscn = cn_dao.getDsChoNgoiTheoToa(toa.getMaToa());
+                List<ChoNgoi> dscn = null;
+                try {
+                    dscn = cn_dao.getDSChoNgoiTheoToa(toa.getMaToa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NC")){
 
 
@@ -643,18 +789,27 @@ public class DoiVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
 
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGheDaDat);
-                            } else {
-                                seatButton.setStyle(styleGheThuong);
+                            try {
+                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGheDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGheThuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             if (col > 7) {
                                 seatButton.setStyle(seatButton.getStyle() + styleGhe2);
@@ -664,7 +819,7 @@ public class DoiVeController implements Initializable {
                             // Với row = 2 thêm lối đi ở giữa (tăng thêm 1 để tạo khoảng trống)
                             gridPane.add(seatButton, col + (col >= 8 ? 2 : 0), row > 1 ? row + 2 : row);
                             int finalCol = col;
-                            if (ctlt != null && ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                            if (ctlt != null && ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                 seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
                             }
                             seatButton.setOnMouseClicked(event -> {
@@ -681,13 +836,17 @@ public class DoiVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     if (ctlt != null) {
-                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaChoNgoi());
+                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaCho());
                                         if (btn != null) {
                                             btn.setStyle(styleGheThuong + (btn.getId().contains("2") ? styleGhe2 : styleGhe1));
                                         }
                                     }
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    try {
+                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     lblGia.setText("Giá: " + moneyFormat.format(ctlt.getGiaCho()));
                                     btn_doiVe.setDisable(false);
                                 }
@@ -722,18 +881,27 @@ public class DoiVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
 
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGheDaDat);
-                            } else {
-                                seatButton.setStyle(styleGheThuong);
+                            try {
+                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGheDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGheThuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             if (col > 7) {
                                 seatButton.setStyle(seatButton.getStyle() + styleGhe2);
@@ -746,7 +914,7 @@ public class DoiVeController implements Initializable {
 
                             int finalCol = col;
 
-                            if (ctlt != null && ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                            if (ctlt != null && ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                 seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
                             }
 
@@ -764,13 +932,17 @@ public class DoiVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     if (ctlt != null) {
-                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaChoNgoi());
+                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaCho());
                                         if (btn != null) {
                                             btn.setStyle(styleGheThuong + (btn.getId().contains("2") ? styleGhe2 : styleGhe1));
                                         }
                                     }
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    try {
+                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     lblGia.setText("Giá: " + moneyFormat.format(ctlt.getGiaCho()));
                                     btn_doiVe.setDisable(false);
                                 }
@@ -802,22 +974,31 @@ public class DoiVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30);
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
 
                             // Thêm nút vào GridPane (với col/2 để tạo khoảng trống giữa các khoang)
                             gridPane.add(seatButton, col + (col / 2) + 1, row + 1);
 
-                            if (ctlt != null && ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                            if (ctlt != null && ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                 seatButton.setStyle(styleGiuongDaChon);
                             }
                             seatButton.setOnMouseClicked(event -> {
@@ -834,13 +1015,17 @@ public class DoiVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     if (ctlt != null) {
-                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaChoNgoi());
+                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaCho());
                                         if (btn != null) {
                                             btn.setStyle(styleGiuong);
                                         }
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    try {
+                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     lblGia.setText("Giá: " + moneyFormat.format(ctlt.getGiaCho()));
                                     btn_doiVe.setDisable(false);
                                 }
@@ -874,23 +1059,32 @@ public class DoiVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30);
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
 
                             // Thêm nút vào GridPane (với col/2 để tạo khoảng trống giữa các khoang)
                             gridPane.add(seatButton, col + (col / 2) + 1, row + 1);
 
-                            if (ctlt != null && ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                            if (ctlt != null && ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                 seatButton.setStyle(styleGiuongDaChon);
                             }
                             seatButton.setOnMouseClicked(event -> {
@@ -907,13 +1101,17 @@ public class DoiVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     if (ctlt != null) {
-                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaChoNgoi());
+                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaCho());
                                         if (btn != null) {
                                             btn.setStyle(styleGiuong);
                                         }
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    try {
+                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     lblGia.setText("Giá: " + moneyFormat.format(ctlt.getGiaCho()));
                                     btn_doiVe.setDisable(false);
                                 }
@@ -943,21 +1141,30 @@ public class DoiVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             gridPane.add(seatButton, col + 1, row + 1);
 
-                            if (ctlt != null && ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                            if (ctlt != null && ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                 seatButton.setStyle(styleGiuongDaChon);
                             }
 
@@ -975,13 +1182,17 @@ public class DoiVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     if (ctlt != null) {
-                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaChoNgoi());
+                                        Button btn = (Button) gridPane.lookup("#" + ctlt.getChoNgoi().getMaCho());
                                         if (btn != null) {
                                             btn.setStyle(styleGiuong);
                                         }
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    try {
+                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     lblGia.setText("Giá: " + moneyFormat.format(ctlt.getGiaCho()));
                                     btn_doiVe.setDisable(false);
                                 }
@@ -992,7 +1203,7 @@ public class DoiVeController implements Initializable {
             });
             imageView.setCursor(Cursor.HAND);
             paneImg.getChildren().add(imageView);
-            Label lbl = new Label(toa.getSoSTToa() + "");
+            Label lbl = new Label(toa.getSttToa() + "");
             lbl.setLayoutX(20);
             lbl.setLayoutY(30);
             lbl.setFont(Font.font("Arial", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -1003,7 +1214,7 @@ public class DoiVeController implements Initializable {
         ImageView imageView1 = new ImageView("file:src/main/resources/img/train.png");
         imageView1.setFitHeight(25);
         imageView1.setFitWidth(50);
-        Label lbl = new Label(lt.getChuyenTau().getSoHieutau());
+        Label lbl = new Label(lt.getSoHieuTau().getSoHieuTau());
         lbl.setLayoutX(15);
         lbl.setLayoutY(30);
         lbl.setFont(Font.font("Arial", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -1012,7 +1223,19 @@ public class DoiVeController implements Initializable {
         paneImg.getChildren().add(lbl);
         grTrain.getChildren().add(paneImg);
         //get toa có stt1
-        ImageView imageView = (ImageView) grTrain.lookup("#" + dstoa.stream().filter(toa -> toa.getSoSTToa() == 1).findFirst().get().getMaToa());
+        ImageView imageView = (ImageView) grTrain.lookup("#" + dstoa.stream().filter(toa -> toa.getSttToa() == 1).findFirst().get().getMaToa());
         imageView.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+    }
+
+    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
+        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
+        ve_dao = (VeService) Naming.lookup("rmi://localhost:9999/Ve_DAO");
+        ga_dao = (GaService) Naming.lookup("rmi://localhost:9999/Ga_DAO");
+        ctlt_dao = (CT_LichTrinhService) Naming.lookup("rmi://localhost:9999/CT_LichTrinh_DAO");
+        cthd_dao = (CT_HoaDonService) Naming.lookup("rmi://localhost:9999/CT_HoaDon_DAO");
+        hd_dao = (HoaDonService) Naming.lookup("rmi://localhost:9999/HoaDon_DAO");
+        toa_dao = (ToaService) Naming.lookup("rmi://localhost:9999/Toa_DAO");
+        ltoa_dao = (LoaiToaService) Naming.lookup("rmi://localhost:9999/LoaiToa_DAO");
+        cn_dao = (ChoNgoiService) Naming.lookup("rmi://localhost:9999/ChoNgoi_DAO");
     }
 }
