@@ -8,12 +8,12 @@ package controller;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXRadioButton;
-import connectdb.ConnectDB;
-import dao.*;
+import javafx.beans.property.SimpleLongProperty;
+import service.*;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcons;
 import entity.*;
-import gui.TrangChu_GUI;
+//import gui.TrangChu_GUI;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,31 +39,29 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import service.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.SQLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-/*
- * @description:
- * @author: Hiep Nguyen
- * @date:   04/10/2024
- * version: 1.0
- */
 public class BanVeController implements Initializable {
-    private final LichTrinh_DAO lt_dao = new LichTrinh_DAO();
-    private final CT_LichTrinh_DAO ctlt_dao = new CT_LichTrinh_DAO();
-    private final Ga_DAO ga_dao = new Ga_DAO();
-    private final KhachHang_DAO hk_dao = new KhachHang_DAO();
-    private final HoaDon_DAO hd_dao = new HoaDon_DAO();
-    private final Toa_DAO toa_dao = new Toa_DAO();
-    private final LoaiToa_DAO ltoa_dao = new LoaiToa_DAO();
-    private final ChoNgoi_DAO cn_dao = new ChoNgoi_DAO();
+    private KhachHangService khachHangService;
+    private HoaDonService hoaDonService;
+    private LichTrinhService lichTrinhService;
+    private CT_LichTrinhService ctLichTrinhService;
+    private ToaService toaService;
+    private GaService gaService;
+    private LoaiToaService loaiToaService;
+    private ChoNgoiService choNgoiService;
 
     private final String styleGheThuong = "-fx-background-color: white; -fx-text-fill: black;-fx-border-color: black;";
     private final String styleGheDaChon = "-fx-background-color: green; -fx-text-fill: white;-fx-border-color: black;";
@@ -126,7 +124,7 @@ public class BanVeController implements Initializable {
     private TableColumn<ChiTietLichTrinh, String> colGiaCho;
 
     @FXML
-    private TableColumn<LichTrinh, Integer> colLT_SLTrong;
+    private TableColumn<LichTrinh, Long> colLT_SLTrong;
 
     @FXML
     private TableColumn<LichTrinh, String> colLT_SoHieu;
@@ -188,32 +186,78 @@ public class BanVeController implements Initializable {
     private ObservableList<ChiTietLichTrinh> dsttcn = null;
     private ArrayList<ChiTietLichTrinh> dsctltkh = new ArrayList<>();
 
+    private void initDAO() throws RemoteException, MalformedURLException, NotBoundException {
+        khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+        CT_HoaDonService ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+        toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
+        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+        loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaiToaService");
+        choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
-            ConnectDB.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
+            initDAO();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (NotBoundException e) {
+            throw new RuntimeException(e);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
         }
         tbLT.setItems(null);
-        colLT_SoHieu.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getChuyenTau().getSoHieutau()));
-        colLT_SLTrong.setCellValueFactory(cellData -> new SimpleIntegerProperty(lt_dao.getSoLuongChoConTrong(cellData.getValue().getMaLichTrinh())).asObject());
-        tbLT.setStyle(tbLT.getStyle() + "-fx-selection-bar: #FFD700; -fx-selection-bar-non-focused: #FFD700;-fx-alignment: CENTER;-fx-content-display: CENTER;-fx-background-color: #fff;");
+        colLT_SoHieu.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSoHieuTau().getSoHieuTau()));
+        colLT_SLTrong.setCellValueFactory(cellData -> {
+            try {
+                return new SimpleLongProperty(lichTrinhService.getSoLuongChoConTrong(cellData.getValue().getMaLichTrinh())).asObject();
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        tbLT.setStyle(tbLT.getStyle() + "-fx-selection-bar: #FFD700; -fx-selection-bar-non-focused: #ffd700;-fx-alignment: CENTER;-fx-content-display: CENTER;-fx-background-color: #fff;");
 
         tbTTCN.setItems(null);
         tbTTCN.setStyle(tbTTCN.getStyle() + "-fx-selection-bar: #FFD700; -fx-selection-bar-non-focused: #FFD700;-fx-alignment: CENTER;-fx-content-display: CENTER;-fx-background-color: #fff;");
         colSoHieuTau.setCellValueFactory(cellData -> {
 
-            return new SimpleStringProperty(lt_dao.getLichTrinhTheoID(cellData.getValue().getLichTrinh().getMaLichTrinh()).getChuyenTau().getSoHieutau());
+            try {
+                return new SimpleObjectProperty<>(lichTrinhService.getLichTrinhTheoID(cellData.getValue().getLichTrinh().getMaLichTrinh()).getSoHieuTau().getSoHieuTau());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         });
         colToa.setCellValueFactory(cellData -> {
-            Toa toa = toa_dao.getToaTheoID(cn_dao.getChoNgoiTheoMa(cellData.getValue().getChoNgoi().getMaChoNgoi()).getToa().getMaToa());
-            return new SimpleIntegerProperty(toa.getSoSTToa()).asObject();
+            Toa toa = null;
+            try {
+                toa = toaService.getToaTheoID(choNgoiService.getChoNgoiTheoMa(cellData.getValue().getChoNgoi().getMaCho()).getToa().getMaToa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            return new SimpleIntegerProperty(toa.getSttToa()).asObject();
         });
         colSTTCho.setCellValueFactory(cellData -> {
-            ChoNgoi cn = cn_dao.getChoNgoiTheoMa(cellData.getValue().getChoNgoi().getMaChoNgoi());
-            Toa toa = toa_dao.getToaTheoID(cn.getToa().getMaToa());
-            LoaiToa lt = ltoa_dao.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa());
+            ChoNgoi cn = null;
+            try {
+                cn = choNgoiService.getChoNgoiTheoMa(cellData.getValue().getChoNgoi().getMaCho());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            Toa toa = null;
+            try {
+                toa = toaService.getToaTheoID(cn.getToa().getMaToa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            LoaiToa lt = null;
+            try {
+                lt = loaiToaService.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
             return new SimpleStringProperty("Chỗ " + cn.getSttCho() + " " + lt.getTenLoaiToa());
         });
         colGiaCho.setCellValueFactory(cellData -> new SimpleStringProperty(DecimalFormat.getCurrencyInstance(Locale.of("vi", "VN")).format(cellData.getValue().getGiaCho())));
@@ -228,7 +272,7 @@ public class BanVeController implements Initializable {
                 dsctlt.remove(cellData.getValue());
                 tbTTCN.refresh();
                 //đổi màu ghế đã chọn
-                Button btn = (Button) paneToa.lookup("#" + cellData.getValue().getChoNgoi().getMaChoNgoi());
+                Button btn = (Button) paneToa.lookup("#" + cellData.getValue().getChoNgoi().getMaCho());
                 if (btn != null) {
                     btn.setStyle(btn.getStyle() + "-fx-background-color: white; -fx-text-fill: black;");
                 }
@@ -237,7 +281,12 @@ public class BanVeController implements Initializable {
             return new SimpleObjectProperty<>(icon);
         });
 
-        ArrayList<LichTrinh> temp = lt_dao.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13));
+        ArrayList<LichTrinh> temp = null;
+        try {
+            temp = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13));
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         showTauTheoLT(temp);
         tbLT.setItems(FXCollections.observableList(temp));
 
@@ -250,7 +299,48 @@ public class BanVeController implements Initializable {
             }
         });
 
-        ArrayList<Ga> ga = new Ga_DAO().getAllGa();
+        ArrayList<Ga> ga = null;
+        try {
+            ga = (ArrayList<Ga>) new GaService() {
+                @Override
+                public List<Ga> getAllGa() throws RemoteException {
+                    return List.of();
+                }
+
+                @Override
+                public Ga getGaTheoMaGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public Ga getGaTheoTenGa(String s) throws RemoteException {
+                    return null;
+                }
+
+                @Override
+                public double KhoangCach(String s) throws RemoteException {
+                    return 0;
+                }
+
+                @Override
+                public boolean create(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean update(Ga ga) throws RemoteException {
+                    return false;
+                }
+
+                @Override
+                public boolean delete(String s) throws RemoteException {
+                    return false;
+                }
+            }.getAllGa();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+
         ArrayList<String> tenGa = new ArrayList<>();
         for (Ga g : ga) {
             tenGa.add(g.getTenGa());
@@ -312,7 +402,11 @@ public class BanVeController implements Initializable {
         });
 
         btnLamMoi.setOnMouseClicked(e -> {
-            lamMoi();
+            try {
+                lamMoi();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         //Gộp 2 JFXRadioButton lại 1 nhóm
@@ -367,9 +461,24 @@ public class BanVeController implements Initializable {
                 dpNgayVe.show();
             } else {
 
-                String maGaDi = ga_dao.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
-                String maGaDen = ga_dao.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
-                ArrayList<LichTrinh> list = lt_dao.traCuuDSLichTrinh(maGaDi, maGaDen, dpNgayKH.getValue());
+                String maGaDi = null;
+                try {
+                    maGaDi = gaService.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
+                String maGaDen = null;
+                try {
+                    maGaDen = gaService.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
+                ArrayList<LichTrinh> list = null;
+                try {
+                    list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinh(maGaDi, maGaDen, dpNgayKH.getValue());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 list.removeIf(l -> !l.getThoiGianKhoiHanh().isAfter(LocalDateTime.now()));
                 if (list.isEmpty()) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -391,16 +500,26 @@ public class BanVeController implements Initializable {
 
         btnChonFullToa.setOnMouseClicked(e -> {
             LichTrinh lt = tbLT.getSelectionModel().getSelectedItem();
-            ArrayList<ChoNgoi> dscn = cn_dao.getDsChoNgoiTheoToa(chosedId);
+            ArrayList<ChoNgoi> dscn = null;
+            try {
+                dscn = (ArrayList<ChoNgoi>) choNgoiService.getDSChoNgoiTheoToa(chosedId);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             dscn.sort(Comparator.comparing(ChoNgoi::getSttCho));
             GridPane gridPane = (GridPane) paneToa.getCenter();
             for (ChoNgoi cn : dscn) {
-                Button btn = (Button) gridPane.lookup("#" + cn.getMaChoNgoi());
+                Button btn = (Button) gridPane.lookup("#" + cn.getMaCho());
                 if (!btn.getStyle().contains("red") && !btn.getStyle().contains("green")) {
                     btn.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 0, false, false, false, false, false, false, false, false, false, false, null));
                 }
             }
-            Toa toa = toa_dao.getToaTheoID(chosedId);
+            Toa toa = null;
+            try {
+                toa = toaService.getToaTheoID(chosedId);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             if (!toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NC") && !toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NM")) {
                 btnChonKhoang.setDisable(true);
             }
@@ -422,13 +541,18 @@ public class BanVeController implements Initializable {
             }
             int khoang = Integer.parseInt(cbKhoang.getValue().split(" ")[1]);
             LichTrinh lt = tbLT.getSelectionModel().getSelectedItem();
-            ArrayList<ChoNgoi> dscn = cn_dao.getDsChoNgoiTheoToa(chosedId);
+            ArrayList<ChoNgoi> dscn = null;
+            try {
+                dscn = (ArrayList<ChoNgoi>) choNgoiService.getDSChoNgoiTheoToa(chosedId);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             dscn.sort(Comparator.comparing(ChoNgoi::getSttCho));
             //đổi màu ghế đã chọn
             GridPane gridPane = (GridPane) paneToa.getCenter();
             for (ChoNgoi cn : dscn) {
                 if (cn.getKhoang() == khoang) {
-                    Button btn = (Button) gridPane.lookup("#" + cn.getMaChoNgoi());
+                    Button btn = (Button) gridPane.lookup("#" + cn.getMaCho());
                     if (!btn.getStyle().contains("red") && !btn.getStyle().contains("green")) {
                         btn.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 0, false, false, false, false, false, false, false, false, false, false, null));
                     }
@@ -445,7 +569,12 @@ public class BanVeController implements Initializable {
                     btn.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 0, false, false, false, false, false, false, false, false, false, false, null));
                 }
             }
-            Toa toa = toa_dao.getToaTheoID(chosedId);
+            Toa toa = null;
+            try {
+                toa = toaService.getToaTheoID(chosedId);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             if (!toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NC") && !toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NM")) {
                 btnChonKhoang.setDisable(false);
             }
@@ -459,9 +588,24 @@ public class BanVeController implements Initializable {
         btnChonCD.setOnMouseClicked(e -> {
             btnChonCD.setDisable(true);
             btnChonKH.setDisable(false);
-            String maGaDi = ga_dao.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
-            String maGaDen = ga_dao.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
-            ArrayList<LichTrinh> list = lt_dao.traCuuDSLichTrinh(maGaDi, maGaDen, dpNgayKH.getValue());
+            String maGaDi = null;
+            try {
+                maGaDi = gaService.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            String maGaDen = null;
+            try {
+                maGaDen = gaService.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            ArrayList<LichTrinh> list = null;
+            try {
+                list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinh(maGaDi, maGaDen, dpNgayKH.getValue());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             list.removeIf(l -> !l.getThoiGianKhoiHanh().isAfter(LocalDateTime.now()));
             dslt = FXCollections.observableList(list);
             tbLT.setItems(dslt);
@@ -469,9 +613,24 @@ public class BanVeController implements Initializable {
         });
 
         btnChonKH.setOnMouseClicked(e -> {
-            String maGaDi = ga_dao.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
-            String maGaDen = ga_dao.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
-            ArrayList<LichTrinh> list = lt_dao.traCuuDSLichTrinh(maGaDen, maGaDi, dpNgayVe.getValue());
+            String maGaDi = null;
+            try {
+                maGaDi = gaService.getGaTheoTenGa(cbGaDi.getValue()).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            String maGaDen = null;
+            try {
+                maGaDen = gaService.getGaTheoTenGa(cbGaDen.getValue()).getMaGa();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+            ArrayList<LichTrinh> list = null;
+            try {
+                list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinh(maGaDen, maGaDi, dpNgayVe.getValue());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             list.removeIf(l -> !l.getThoiGianKhoiHanh().isAfter(LocalDateTime.now()));
             if (list.isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -500,7 +659,12 @@ public class BanVeController implements Initializable {
                     btn.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 0, false, false, false, false, false, false, false, false, false, false, null));
                 }
             }
-            Toa toa = toa_dao.getToaTheoID(chosedId);
+            Toa toa = null;
+            try {
+                toa = toaService.getToaTheoID(chosedId);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             if (!toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NC") && !toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NM")) {
                 btnChonKhoang.setDisable(false);
             }
@@ -578,25 +742,37 @@ public class BanVeController implements Initializable {
                     return;
                 }
             }
-            if (hk_dao.getKhachHangTheoSDT(txtSDT.getText()) == null && hk_dao.getKHTheoCCCD(txtSoCCCD.getText()) == null) {
-                hk_dao.create(new KhachHang("temp", txtTenKH.getText(), txtSoCCCD.getText(), txtSDT.getText(), txtEmail.getText()));
+            try {
+                if (khachHangService.getKhachHangTheoSDT(txtSDT.getText()) == null && khachHangService.getKHTheoCCCD(txtSoCCCD.getText()) == null) {
+                    khachHangService.create(new KhachHang("temp", txtTenKH.getText(), txtSoCCCD.getText(), txtSDT.getText(), txtEmail.getText()));
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
-            getData.kh = hk_dao.getKhachHangTheoSDT(txtSDT.getText());
+            try {
+                getData.kh = khachHangService.getKhachHangTheoSDT(txtSDT.getText());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
             getData.dsctlt = dsctlt;
             getData.dsctltkh = dsctltkh;
             LocalDateTime now = LocalDateTime.now();
             now = now.minusNanos(now.getNano());
-            HoaDon hd = new HoaDon("temp", getData.nv, getData.kh, now, new KhuyenMai(null), false);
-            if (hd_dao.createTempInvoice(hd)) {
-                //get hóa đơn vừa tạo
-                getData.hd = hd_dao.getHoaDonVuaTao();
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText(null);
-                alert.setContentText("Tạo hóa đơn thất bại");
-                alert.show();
-                return;
+            HoaDon hd = new HoaDon("temp");
+            try {
+                if (hoaDonService.createTempInvoice(hd)) {
+                    //get hóa đơn vừa tạo
+                    getData.hd = hoaDonService.getHoaDonVuaTao();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Tạo hóa đơn thất bại");
+                    alert.show();
+                    return;
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
             try {
                 AnchorPane acpHoaDon = FXMLLoader.load(Objects.requireNonNull(TrangChu_GUI.class.getResource("hoa-don.fxml")));
@@ -613,12 +789,25 @@ public class BanVeController implements Initializable {
                     alert.setContentText("Xác nhận thoát?");
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.isPresent() && result.get() == ButtonType.OK) {
-                        HoaDon hoaDon = hd_dao.getHoaDonVuaTao();
+                        HoaDon hoaDon = null;
+                        try {
+                            hoaDon = hoaDonService.getHoaDonVuaTao();
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
-                            hd_dao.delete(hoaDon);
+                            try {
+                                hoaDonService.delete(hoaDon);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                         stgHoaDon.close();
-                        lamMoi();
+                        try {
+                            lamMoi();
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     } else {
                         e1.consume();
                     }
@@ -626,11 +815,24 @@ public class BanVeController implements Initializable {
 
                 Button btnBack = (Button) acpHoaDon.lookup("#btnBackBanVe");
                 btnBack.setOnMouseClicked(e1 -> {
-                    HoaDon hoaDon = hd_dao.getHoaDonVuaTao();
+                    HoaDon hoaDon = null;
+                    try {
+                        hoaDon = hoaDonService.getHoaDonVuaTao();
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
-                        hd_dao.delete(hoaDon);
+                        try {
+                            hoaDonService.delete(hoaDon);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     } else {
-                        lamMoi();
+                        try {
+                            lamMoi();
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     getData.hd = null;
                     getData.dsctlt = null;
@@ -648,21 +850,29 @@ public class BanVeController implements Initializable {
 
         //Nhập số điện thoại hiển thị ra khách hàng
         txtSDT.setOnKeyTyped(e -> {
-            if (hk_dao.getKhachHangTheoSDT(txtSDT.getText()) != null) {
-                KhachHang kh = hk_dao.getKhachHangTheoSDT(txtSDT.getText());
-                txtTenKH.setText(kh.getTenKH());
-                txtSoCCCD.setText(kh.getSoCCCD());
-                txtEmail.setText(kh.getEmail());
+            try {
+                if (khachHangService.getKhachHangTheoSDT(txtSDT.getText()) != null) {
+                    KhachHang kh = khachHangService.getKhachHangTheoSDT(txtSDT.getText());
+                    txtTenKH.setText(kh.getTenKH());
+                    txtSoCCCD.setText(kh.getSoCCCD());
+                    txtEmail.setText(kh.getEmail());
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
 
         });
 
         txtSoCCCD.setOnKeyTyped(e -> {
-            if (hk_dao.getKHTheoCCCD(txtSoCCCD.getText()) != null) {
-                KhachHang kh = hk_dao.getKHTheoCCCD(txtSoCCCD.getText());
-                txtTenKH.setText(kh.getTenKH());
-                txtSDT.setText(kh.getSdt());
-                txtEmail.setText(kh.getEmail());
+            try {
+                if (khachHangService.getKHTheoCCCD(txtSoCCCD.getText()) != null) {
+                    KhachHang kh = khachHangService.getKHTheoCCCD(txtSoCCCD.getText());
+                    txtTenKH.setText(kh.getTenKH());
+                    txtSDT.setText(kh.getSdt());
+                    txtEmail.setText(kh.getEmail());
+                }
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
@@ -674,7 +884,7 @@ public class BanVeController implements Initializable {
         });
     }
 
-    private void lamMoi() {
+    private void lamMoi() throws RemoteException {
         getData.hd = null;
         getData.dsctlt = null;
         getData.dsctltkh = null;
@@ -689,7 +899,7 @@ public class BanVeController implements Initializable {
         btnChonCD.setDisable(true);
         btnChonKH.setDisable(false);
         btnXoaAllCN.setDisable(true);
-        showTauTheoLT(lt_dao.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13)));
+        showTauTheoLT((ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13)));
         cbGaDi.setValue(null);
         cbGaDi.requestFocus();
         cbGaDen.setValue(null);
@@ -719,7 +929,7 @@ public class BanVeController implements Initializable {
                 Label lblTGDen = (Label) pTau.lookup("#lblTGDen");
                 ImageView imgTau = (ImageView) pTau.lookup("#imgTau");
                 imgTau.setId(lt.getMaLichTrinh());
-                lblSoHieuTau.setText(lt.getChuyenTau().getSoHieutau());
+                lblSoHieuTau.setText((lt.getSoHieuTau().getSoHieuTau()));
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM HH:mm");
                 lblTGKH.setText(lt.getThoiGianKhoiHanh().format(formatter));
                 lblTGDen.setText(lt.getThoiGianDuKienDen().format(formatter));
@@ -736,7 +946,11 @@ public class BanVeController implements Initializable {
                             imageView.setEffect(ca);
                         }
                     }
-                    showToaTheoLT(lt);
+                    try {
+                        showToaTheoLT(lt);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
                 paneTau.getChildren().add(pTau);
             } catch (IOException ex) {
@@ -755,17 +969,17 @@ public class BanVeController implements Initializable {
         }
     }
 
-    private void showToaTheoLT(LichTrinh lt) {
+    private void showToaTheoLT(LichTrinh lt) throws RemoteException {
         chosedId = null;
         grTrain.getChildren().clear();
-        ArrayList<Toa> dstoa = toa_dao.getAllToaTheoChuyenTau(lt.getChuyenTau().getSoHieutau());
+        ArrayList<Toa> dstoa = (ArrayList<Toa>) toaService.getAllToaTheoChuyenTau((lt.getSoHieuTau().getSoHieuTau()));
         if (!btnChonKH.isDisable()) {
             Collections.reverse(dstoa);
         } else {
             ImageView imageView1 = new ImageView("file:src/main/resources/img/train1.png");
             imageView1.setFitHeight(25);
             imageView1.setFitWidth(50);
-            Label lbl = new Label(lt.getChuyenTau().getSoHieutau());
+            Label lbl = new Label(String.valueOf(lt.getSoHieuTau().getSoHieuTau()));
             lbl.setLayoutX(15);
             lbl.setLayoutY(30);
             lbl.setFont(Font.font("Arial", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -804,7 +1018,11 @@ public class BanVeController implements Initializable {
             });
 
             imageView.setOnMouseClicked(e -> {
-                lblToa.setText("Toa " + toa.getSoSTToa() + ": " + ltoa_dao.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                try {
+                    lblToa.setText("Toa " + toa.getSttToa() + ": " + loaiToaService.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 paneImg.setStyle("-fx-background-color: lightgreen;-fx-background-radius: 5;");
                 //đổi màu các imageView còn lại
                 if (chosedId != null) {
@@ -821,7 +1039,12 @@ public class BanVeController implements Initializable {
                     btnChonKhoang.setDisable(true);
                 }
                 gridPane.getChildren().clear();
-                ArrayList<ChoNgoi> dscn = cn_dao.getDsChoNgoiTheoToa(toa.getMaToa());
+                ArrayList<ChoNgoi> dscn = null;
+                try {
+                    dscn = (ArrayList<ChoNgoi>) choNgoiService.getDSChoNgoiTheoToa(toa.getMaToa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 if (toa.getLoaiToa().getMaLoaiToa().equalsIgnoreCase("NC")){
 
 
@@ -848,18 +1071,27 @@ public class BanVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
 
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = choNgoiService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGheDaDat);
-                            } else {
-                                seatButton.setStyle(styleGheThuong);
+                            try {
+                                if (!ctLichTrinhService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGheDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGheThuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             if (col > 7) {
                                 seatButton.setStyle(seatButton.getStyle() + styleGhe2);
@@ -872,15 +1104,15 @@ public class BanVeController implements Initializable {
                             //đổi màu seatbtn nếu đã có trong tbCTCN
                             int finalCol = col;
                             for (ChiTietLichTrinh ctlt : dsctlt) {
-                                if (ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                                if (ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                     seatButton.setStyle(styleGheDaChon  + (finalCol > 7 ? styleGhe2 : styleGhe1));
                                 }
                             }
                             seatButton.setOnMouseClicked(event -> {
                                 if (seatButton.getStyle().contains("green")) {
                                     seatButton.setStyle(styleGheThuong + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
-                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
+                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
+                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
                                 } else if (seatButton.getStyle().contains("red")) {
@@ -891,9 +1123,17 @@ public class BanVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    dsctlt.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    try {
+                                        dsctlt.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     if (btnChonKH.isDisable()) {
-                                        dsctltkh.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        try {
+                                            dsctltkh.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        } catch (RemoteException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
@@ -937,18 +1177,27 @@ public class BanVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
 
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = choNgoiService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGheDaDat);
-                            } else {
-                                seatButton.setStyle(styleGheThuong);
+                            try {
+                                if (!ctLichTrinhService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGheDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGheThuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             if (col > 7) {
                                 seatButton.setStyle(seatButton.getStyle() + styleGhe2);
@@ -961,15 +1210,15 @@ public class BanVeController implements Initializable {
 
                             int finalCol = col;
                             for (ChiTietLichTrinh ctlt : dsctlt) {
-                                if (ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                                if (ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
                                 }
                             }
                             seatButton.setOnMouseClicked(event -> {
                                 if (seatButton.getStyle().contains("green")) {
                                     seatButton.setStyle(styleGheThuong + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
-                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
+                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
+                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
                                 } else if (seatButton.getStyle().contains("red")) {
@@ -980,9 +1229,17 @@ public class BanVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
-                                    dsctlt.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    try {
+                                        dsctlt.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     if (btnChonKH.isDisable()) {
-                                        dsctltkh.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        try {
+                                            dsctltkh.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        } catch (RemoteException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
@@ -1023,31 +1280,40 @@ public class BanVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30);
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = choNgoiService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctLichTrinhService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
 
                             // Thêm nút vào GridPane (với col/2 để tạo khoảng trống giữa các khoang)
                             gridPane.add(seatButton, col + (col / 2) + 1, row + 1);
 
                             for (ChiTietLichTrinh ctlt : dsctlt) {
-                                if (ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                                if (ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                     seatButton.setStyle(styleGiuongDaChon);
                                 }
                             }
                             seatButton.setOnMouseClicked(event -> {
                                 if (seatButton.getStyle().contains("green")) {
                                     seatButton.setStyle(styleGiuong);
-                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
-                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
+                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
+                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
                                 } else if (seatButton.getStyle().contains("red")) {
@@ -1058,9 +1324,17 @@ public class BanVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    dsctlt.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    try {
+                                        dsctlt.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     if (btnChonKH.isDisable()) {
-                                        dsctltkh.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        try {
+                                            dsctltkh.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        } catch (RemoteException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
@@ -1103,32 +1377,41 @@ public class BanVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30);
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = choNgoiService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctLichTrinhService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
 
                             // Thêm nút vào GridPane (với col/2 để tạo khoảng trống giữa các khoang)
                             gridPane.add(seatButton, col + (col / 2) + 1, row + 1);
 
                             for (ChiTietLichTrinh ctlt : dsctlt) {
-                                if (ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                                if (ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                     seatButton.setStyle(styleGiuongDaChon);
                                 }
                             }
                             seatButton.setOnMouseClicked(event -> {
                                 if (seatButton.getStyle().contains("green")) {
                                     seatButton.setStyle(styleGiuong);
-                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
-                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
+                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
+                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
                                 } else if (seatButton.getStyle().contains("red")) {
@@ -1139,9 +1422,17 @@ public class BanVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    dsctlt.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    try {
+                                        dsctlt.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     if (btnChonKH.isDisable()) {
-                                        dsctltkh.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        try {
+                                            dsctltkh.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        } catch (RemoteException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
@@ -1180,30 +1471,39 @@ public class BanVeController implements Initializable {
                             seatButton.setCursor(Cursor.HAND);
                             for (ChoNgoi cn : dscn) {
                                 if(cn.getSttCho() == seatNumber) {
-                                    seatButton.setId(cn.getMaChoNgoi());
+                                    seatButton.setId(cn.getMaCho());
                                 }
                             }
                             seatButton.setMinSize(30, 30); // Kích thước nút ghế
                             // Kiểm tra trạng thái của ghế
-                            ChoNgoi choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            ChoNgoi choNgoi = null;
+                            try {
+                                choNgoi = choNgoiService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
 
-                            if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaChoNgoi())) {
-                                seatButton.setStyle(styleGiuongDaDat);
-                            } else {
-                                seatButton.setStyle(styleGiuong);
+                            try {
+                                if (!ctLichTrinhService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                    seatButton.setStyle(styleGiuongDaDat);
+                                } else {
+                                    seatButton.setStyle(styleGiuong);
+                                }
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
                             }
                             gridPane.add(seatButton, col + 1, row + 1);
 
                             for (ChiTietLichTrinh ctlt : dsctlt) {
-                                if (ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId())) {
+                                if (ctlt.getChoNgoi().getMaCho().equals(seatButton.getId())) {
                                     seatButton.setStyle(styleGiuongDaChon);
                                 }
                             }
                             seatButton.setOnMouseClicked(event -> {
                                 if (seatButton.getStyle().contains("green")) {
                                     seatButton.setStyle(styleGiuong);
-                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
-                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaChoNgoi().equals(seatButton.getId()));
+                                    dsctlt.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
+                                    dsctltkh.removeIf(ctlt -> ctlt.getChoNgoi().getMaCho().equals(seatButton.getId()));
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
                                 } else if (seatButton.getStyle().contains("red")) {
@@ -1214,9 +1514,17 @@ public class BanVeController implements Initializable {
                                     alert.show();
                                 } else {
                                     seatButton.setStyle(styleGiuongDaChon);
-                                    dsctlt.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    try {
+                                        dsctlt.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                     if (btnChonKH.isDisable()) {
-                                        dsctltkh.add(ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        try {
+                                            dsctltkh.add(ctLichTrinhService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId()));
+                                        } catch (RemoteException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
                                     dsttcn = FXCollections.observableList(dsctlt);
                                     tbTTCN.setItems(dsttcn);
@@ -1236,7 +1544,7 @@ public class BanVeController implements Initializable {
             });
             imageView.setCursor(Cursor.HAND);
             paneImg.getChildren().add(imageView);
-            Label lbl = new Label(toa.getSoSTToa() + "");
+            Label lbl = new Label(toa.getSttToa() + "");
             lbl.setLayoutX(20);
             lbl.setLayoutY(30);
             lbl.setFont(Font.font("Arial", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -1248,7 +1556,7 @@ public class BanVeController implements Initializable {
             ImageView imageView1 = new ImageView("file:src/main/resources/img/train.png");
             imageView1.setFitHeight(25);
             imageView1.setFitWidth(50);
-            Label lbl = new Label(lt.getChuyenTau().getSoHieutau());
+            Label lbl = new Label(String.valueOf(lt.getSoHieuTau().getSoHieuTau()));
             lbl.setLayoutX(15);
             lbl.setLayoutY(30);
             lbl.setFont(Font.font("Arial", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -1258,7 +1566,7 @@ public class BanVeController implements Initializable {
             grTrain.getChildren().add(paneImg);
         }
         //get toa có stt1
-        ImageView imageView = (ImageView) grTrain.lookup("#" + dstoa.stream().filter(toa -> toa.getSoSTToa() == 1).findFirst().get().getMaToa());
+        ImageView imageView = (ImageView) grTrain.lookup("#" + dstoa.stream().filter(toa -> toa.getSttToa() == 1).findFirst().get().getMaToa());
         imageView.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
     }
 }

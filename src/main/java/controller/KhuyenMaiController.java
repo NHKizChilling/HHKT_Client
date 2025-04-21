@@ -1,6 +1,6 @@
 package controller;
 
-import dao.KhuyenMai_DAO;
+import service.KhuyenMaiService;
 import entity.KhuyenMai;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -13,9 +13,11 @@ import javafx.scene.layout.AnchorPane;
 
 import java.io.Serializable;
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -87,12 +89,72 @@ public class KhuyenMaiController implements Initializable, Serializable {
     @FXML
     private AnchorPane acpFeature;
 
-    private KhuyenMai_DAO khuyenMai_dao;
+    private KhuyenMaiService khuyenMaiService;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        khuyenMai_dao = new KhuyenMai_DAO();
-        ArrayList<KhuyenMai> list = khuyenMai_dao.getAllKM();
+        khuyenMaiService = new KhuyenMaiService() {
+            @Override
+            public List<KhuyenMai> getAllKM() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public List<KhuyenMai> getKMHienCo() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public KhuyenMai getKMTheoMa(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public KhuyenMai getKMGiamCaoNhat() throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public List<KhuyenMai> getKMTheoNgay(LocalDate localDate) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public boolean themKhuyenMai(KhuyenMai khuyenMai) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean suaKhuyenMai(KhuyenMai khuyenMai) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean xoaKhuyenMai(String s) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean kichHoatKhuyenMai() throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean khoaKhuyenMai() throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean capNhatTrangThaiKM(String s, boolean b) throws RemoteException {
+                return false;
+            }
+        };
+        ArrayList<KhuyenMai> list = null;
+        try {
+            list = (ArrayList<KhuyenMai>) khuyenMaiService.getAllKM();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
 
         cb_searchTrangThai.getItems().addAll("Tất cả", "Đang áp dụng", "Ngưng áp dụng", "Chưa áp dụng");
@@ -103,6 +165,7 @@ public class KhuyenMaiController implements Initializable, Serializable {
         renderTable(list);
 
 
+        ArrayList<KhuyenMai> finalList = list;
         btn_search.setOnAction(e -> {
             String maKM = txt_searchMaKM.getText();
             String trangThai = cb_searchTrangThai.getValue();
@@ -113,10 +176,14 @@ public class KhuyenMaiController implements Initializable, Serializable {
             boolean boolTrangThai = !trangThai.equals("Ngưng áp dụng") && !trangThai.equals("Chưa áp dụng");
 
             if (maKM.isEmpty() && trangThai.equals("Tất cả") && ngayApDung == null) {
-                renderTable(list);
+                renderTable(finalList);
             } else {
                 if (!maKM.isEmpty()) {
-                    km = khuyenMai_dao.getKMTheoMa(maKM);
+                    try {
+                        km = khuyenMaiService.getKMTheoMa(maKM);
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     if (km != null) {
                         newList.add(km);
                     } else {
@@ -136,9 +203,17 @@ public class KhuyenMaiController implements Initializable, Serializable {
                     return;
                 }
                 if (ngayApDung != null && trangThai.equals("Tất cả")) {
-                    newList = khuyenMai_dao.getKMTheoNgay(ngayApDung);
+                    try {
+                        newList = (ArrayList<KhuyenMai>) khuyenMaiService.getKMTheoNgay(ngayApDung);
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 } else if (ngayApDung != null) {
-                    newList = khuyenMai_dao.getKMTheoNgay(ngayApDung);
+                    try {
+                        newList = (ArrayList<KhuyenMai>) khuyenMaiService.getKMTheoNgay(ngayApDung);
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     if (boolTrangThai) {
                         newList.stream()
                                 .filter(KhuyenMai::isTrangThai)
@@ -174,7 +249,11 @@ public class KhuyenMaiController implements Initializable, Serializable {
             btn_add.setDisable(false);
             btn_update.setDisable(true);
             btn_clear.fire();
-            renderTable(khuyenMai_dao.getAllKM());
+            try {
+                renderTable((ArrayList<KhuyenMai>) khuyenMaiService.getAllKM());
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         btn_clear.setOnAction(e -> {
@@ -199,20 +278,28 @@ public class KhuyenMaiController implements Initializable, Serializable {
                 boolean trangThai = cb_trangThai.getValue().equals("Đang áp dụng");
 
                 KhuyenMai km = new KhuyenMai(maKM, moTa, ngayBatDau, ngayKetThuc, (float) mucGiam / 100, trangThai);
-                if (khuyenMai_dao.themKhuyenMai(km)) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Tạo khuyến mãi thành công");
-                    alert.showAndWait();
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Tạo khuyến mãi thất bại");
-                    alert.showAndWait();
+                try {
+                    if (khuyenMaiService.themKhuyenMai(km)) {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Thông báo");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Tạo khuyến mãi thành công");
+                        alert.showAndWait();
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Thông báo");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Tạo khuyến mãi thất bại");
+                        alert.showAndWait();
+                    }
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
                 }
-                renderTable(khuyenMai_dao.getAllKM());
+                try {
+                    renderTable((ArrayList<KhuyenMai>) khuyenMaiService.getAllKM());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 btn_clear.fire();
             }
         });
@@ -227,20 +314,28 @@ public class KhuyenMaiController implements Initializable, Serializable {
                 boolean trangThai = cb_trangThai.getValue().equals("Đang áp dụng");
 
                 KhuyenMai km = new KhuyenMai(maKM, moTa, ngayBatDau, ngayKetThuc, (float) mucGiam / 100, trangThai);
-                if (khuyenMai_dao.suaKhuyenMai(km)) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Cập nhật khuyến mãi thành công");
-                    alert.showAndWait();
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Cập nhật khuyến mãi thất bại");
-                    alert.showAndWait();
+                try {
+                    if (khuyenMaiService.suaKhuyenMai(km)) {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Thông báo");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Cập nhật khuyến mãi thành công");
+                        alert.showAndWait();
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Thông báo");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Cập nhật khuyến mãi thất bại");
+                        alert.showAndWait();
+                    }
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
                 }
-                renderTable(khuyenMai_dao.getAllKM());
+                try {
+                    renderTable((ArrayList<KhuyenMai>) khuyenMaiService.getAllKM());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 btn_clear.fire();
             }
         });

@@ -1,8 +1,8 @@
 package controller;
 
 import com.jfoenix.controls.JFXComboBox;
-import connectdb.ConnectDB;
-import dao.*;
+//import connectdb.ConnectDB;
+import service.*;
 import entity.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -12,7 +12,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +24,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class LichTrinhController implements Initializable {
@@ -105,32 +110,44 @@ public class LichTrinhController implements Initializable {
     @FXML
     private AnchorPane acpFeature;
 
-    private LichTrinh_DAO lichTrinh_DAO;
-    private CT_LichTrinh_DAO ct_LichTrinh_DAO;
-    private Ga_DAO ga_DAO;
-    private ChuyenTau_DAO chuyenTau_DAO;
+    private LichTrinhService lichTrinhService;
+    private CT_LichTrinhService ct_lichTrinhService;
+    private GaService gaService;
+    private ChuyenTauService chuyenTauService;
 
     private ArrayList<LichTrinh> list;
+
+    private void initDAO() throws RemoteException, MalformedURLException, NotBoundException {
+        chuyenTauService = (ChuyenTauService) Naming.lookup("rmi://localhost:7701/ChuyenTauService");
+        ct_lichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
-        // TODO Auto-generated method stub
-        try {
-            ConnectDB.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
         initDao();
+
         list = new ArrayList<>();
-        ArrayList<Ga> listGa = ga_DAO.getAllGa();
+        ArrayList<Ga> listGa = null;
+        try {
+            listGa = (ArrayList<Ga>) gaService.getAllGa();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         for (Ga ga : listGa) {
             cb_GaDen.getItems().add(ga.getTenGa());
             cb_GaDi.getItems().add(ga.getTenGa());
             cb_infoGaDen.getItems().add(ga.getTenGa());
             cb_infoGaDi.getItems().add(ga.getTenGa());
         }
-        ArrayList<String> listSoHieuTau = chuyenTau_DAO.getAll().stream().map(ChuyenTau::getSoHieutau).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        ArrayList<String> listSoHieuTau = null;
+        try {
+            listSoHieuTau = chuyenTauService.getAll().stream().map(ChuyenTau::getSoHieuTau).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         cb_soHieuTau.getItems().addAll(listSoHieuTau);
 
         for (String soHieuTau : listSoHieuTau) {
@@ -144,13 +161,29 @@ public class LichTrinhController implements Initializable {
         cb_infoTrangThaiHoatDong.getItems().addAll("Hoạt động", "Không hoạt động");
 
         col_maLichTrinh.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getMaLichTrinh()));
-        col_soHieuTau.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getChuyenTau().getSoHieutau()));
-        col_gaDi.setCellValueFactory(cellData -> new SimpleStringProperty(ga_DAO.getGaTheoMaGa(cellData.getValue().getGaDi().getMaGa()).getTenGa()));
-        col_maDen.setCellValueFactory(cellData -> new SimpleStringProperty(ga_DAO.getGaTheoMaGa(cellData.getValue().getGaDen().getMaGa()).getTenGa()));
+        col_soHieuTau.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getSoHieuTau().getSoHieuTau()));
+        col_gaDi.setCellValueFactory(cellData -> {
+            try {
+                return new SimpleStringProperty(gaService.getGaTheoMaGa(cellData.getValue().getGaDi().getMaGa()).getTenGa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        col_maDen.setCellValueFactory(cellData -> {
+            try {
+                return new SimpleStringProperty(gaService.getGaTheoMaGa(cellData.getValue().getGaDen().getMaGa()).getTenGa());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        });
         col_tgKhoiHanh.setCellValueFactory(cellData -> new SimpleStringProperty(formatter.format(cellData.getValue().getThoiGianKhoiHanh())));
-        col_trangThaiHoatDong.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().isTinhTrang() ? "Hoạt động" : "Không hoạt động"));
+        col_trangThaiHoatDong.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().isTrangThai() ? "Hoạt động" : "Không hoạt động"));
 
-        list = lichTrinh_DAO.traCuuDSLichTrinhTheoNgay(LocalDate.now());
+        try {
+            list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.now());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
         tbl_lichTrinh.setItems(FXCollections.observableArrayList(list));
 
         tbl_lichTrinh.setOnMouseClicked(e -> {
@@ -158,9 +191,17 @@ public class LichTrinhController implements Initializable {
             if (lichTrinh != null) {
                 btn_add.setDisable(true);
                 txt_maLichTrinh.setText(lichTrinh.getMaLichTrinh());
-                cb_soHieuTau.setValue(lichTrinh.getChuyenTau().getSoHieutau());
-                cb_infoGaDi.setValue(ga_DAO.getGaTheoMaGa(lichTrinh.getGaDi().getMaGa()).getTenGa());
-                cb_infoGaDen.setValue(ga_DAO.getGaTheoMaGa(lichTrinh.getGaDen().getMaGa()).getTenGa());
+                cb_soHieuTau.setValue(String.valueOf(lichTrinh.getSoHieuTau()));
+                try {
+                    cb_infoGaDi.setValue(gaService.getGaTheoMaGa(lichTrinh.getGaDi().getMaGa()).getTenGa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
+                try {
+                    cb_infoGaDen.setValue(gaService.getGaTheoMaGa(lichTrinh.getGaDen().getMaGa()).getTenGa());
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
                 datePicker_tgKhoiHanh.setValue(lichTrinh.getThoiGianKhoiHanh().toLocalDate());
                 infoGioDi.setText(String.valueOf(lichTrinh.getThoiGianKhoiHanh().getHour()));
                 infoPhutDi.setText(String.valueOf(lichTrinh.getThoiGianKhoiHanh().getMinute()));
@@ -191,15 +232,27 @@ public class LichTrinhController implements Initializable {
         });
 
         btn_timKiem.setOnAction(e -> {
-            timKiem();
+            try {
+                timKiem();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         btn_lamMoi.setOnAction(e -> {
-            clear();
+            try {
+                clear();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         btn_add.setOnAction(e -> {
-            add();
+            try {
+                add();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         btn_update.setOnAction(e -> {
@@ -313,17 +366,192 @@ public class LichTrinhController implements Initializable {
 
     protected void initDao() {
         // TODO Auto-generated method stub
-        lichTrinh_DAO = new LichTrinh_DAO();
-        ct_LichTrinh_DAO = new CT_LichTrinh_DAO();
-        ga_DAO = new Ga_DAO();
-        chuyenTau_DAO = new ChuyenTau_DAO();
+        lichTrinhService = new LichTrinhService() {
+            @Override
+            public List<LichTrinh> getAll() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public LichTrinh getLichTrinhTheoID(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public List<LichTrinh> getDSLichTrinhTheoTrangThai(boolean b) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public List<LichTrinh> traCuuDSLichTrinh(String s, String s1) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public List<LichTrinh> traCuuDSLichTrinh(String s, String s1, LocalDate localDate) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public List<LichTrinh> traCuuDSLichTrinhSauNgayHienTai() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public List<LichTrinh> traCuuDSLichTrinhTheoNgay(LocalDate localDate) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public Long getSoLuongChoConTrong(String s) throws RemoteException {
+                return 0L;
+            }
+
+            @Override
+            public boolean updateTrangThaiChuyenTau(String s, boolean b) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean updateTrangThaiCT(boolean b) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(LichTrinh lichTrinh) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean updateInfo(LichTrinh lichTrinh) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean create(LichTrinh lichTrinh) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public LichTrinh getOne(String s) throws RemoteException {
+                return null;
+            }
+        };
+        ct_lichTrinhService = new CT_LichTrinhService() {
+            @Override
+            public List<ChiTietLichTrinh> getAllChiTietLichTrinh() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public boolean create(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean updateCTLT(ChiTietLichTrinh chiTietLichTrinh, boolean b) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(String s, String s1) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public List<ChiTietLichTrinh> getCtltTheoTrangThai(boolean b) throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public ChiTietLichTrinh getCTLTTheoCN(String s, String s1) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public boolean getTrangThaiCN(String s, String s1) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public void addChiTietLichTrinh(String s) throws RemoteException {
+
+            }
+
+            @Override
+            public List<ChiTietLichTrinh> getCtltTheoMaLichTrinh(String s) throws RemoteException {
+                return List.of();
+            }
+        };
+        gaService = new GaService() {
+            @Override
+            public List<Ga> getAllGa() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public Ga getGaTheoMaGa(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public Ga getGaTheoTenGa(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public double KhoangCach(String s) throws RemoteException {
+                return 0;
+            }
+
+            @Override
+            public boolean create(Ga ga) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(Ga ga) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean delete(String s) throws RemoteException {
+                return false;
+            }
+        };
+        chuyenTauService = new ChuyenTauService() {
+            @Override
+            public List<ChuyenTau> getAll() throws RemoteException {
+                return List.of();
+            }
+
+            @Override
+            public ChuyenTau getChuyenTauTheoID(String s) throws RemoteException {
+                return null;
+            }
+
+            @Override
+            public boolean create(ChuyenTau chuyenTau) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public boolean update(ChuyenTau chuyenTau) throws RemoteException {
+                return false;
+            }
+        };
     }
 
-    protected void timKiem() {
+    protected void timKiem() throws RemoteException {
         // TODO Auto-generated method stub
         list = new ArrayList<>();
-        Ga gaDi = ga_DAO.getGaTheoTenGa(cb_GaDi.getValue());
-        Ga gaDen = ga_DAO.getGaTheoTenGa(cb_GaDen.getValue());
+        Ga gaDi = gaService.getGaTheoTenGa(cb_GaDi.getValue());
+        Ga gaDen = gaService.getGaTheoTenGa(cb_GaDen.getValue());
         LocalDate ngayKH = dp_ngayKH.getValue();
         if (gaDi == null && gaDen == null && ngayKH == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -336,7 +564,7 @@ public class LichTrinhController implements Initializable {
         }
         if (ngayKH == null) {
             if (gaDi != null && gaDen != null) {
-                list = lichTrinh_DAO.traCuuDSLichTrinh(gaDi.getMaGa(), gaDen.getMaGa());
+                list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinh(gaDi.getMaGa(), gaDen.getMaGa());
             } else if (gaDi == null) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Thông báo");
@@ -356,9 +584,9 @@ public class LichTrinhController implements Initializable {
             }
         } else {
             if (gaDi != null && gaDen != null) {
-                list = lichTrinh_DAO.traCuuDSLichTrinh(gaDi.getMaGa(), gaDen.getMaGa(), ngayKH);
+                list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinh(gaDi.getMaGa(), gaDen.getMaGa(), ngayKH);
             } else {
-                list = lichTrinh_DAO.traCuuDSLichTrinhTheoNgay(ngayKH);
+                list = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(ngayKH);
             }
         }
         if (list.isEmpty()) {
@@ -375,7 +603,7 @@ public class LichTrinhController implements Initializable {
         tbl_lichTrinh.setItems(FXCollections.observableArrayList(list));
     }
 
-    protected void clear() {
+    protected void clear() throws RemoteException {
         txt_maLichTrinh.clear();
         cb_soHieuTau.setValue(null);
         cb_soHieuTau.setDisable(false);
@@ -395,11 +623,11 @@ public class LichTrinhController implements Initializable {
         cb_infoTrangThaiHoatDong.setValue(null);
         btn_add.setDisable(false);
         btn_update.setDisable(true);
-        tbl_lichTrinh.setItems(FXCollections.observableArrayList(lichTrinh_DAO.traCuuDSLichTrinhTheoNgay(LocalDate.now())));
+        tbl_lichTrinh.setItems(FXCollections.observableArrayList(lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.now())));
         cb_GaDi.requestFocus();
     }
 
-    protected void add() {
+    protected void add() throws RemoteException {
         // TODO Auto-generated method
         String maLichTrinh;
         String soHieuTau = cb_soHieuTau.getValue();
@@ -411,7 +639,7 @@ public class LichTrinhController implements Initializable {
         String trangThai = cb_infoTrangThaiHoatDong.getValue();
 
         String ngayKHStr = ngayKH.format(DateTimeFormatter.ofPattern("ddMMyy"));
-        maLichTrinh = "LT" + soHieuTau + ngayKHStr + ga_DAO.getGaTheoTenGa(gaDi).getMaGa() + ga_DAO.getGaTheoTenGa(gaDen).getMaGa();
+        maLichTrinh = "LT" + soHieuTau + ngayKHStr + gaService.getGaTheoTenGa(gaDi).getMaGa() + gaService.getGaTheoTenGa(gaDen).getMaGa();
         if (soHieuTau == null || gaDi == null || gaDen == null || gioKH == null || phutKH == null || trangThai == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Thông báo");
@@ -428,9 +656,9 @@ public class LichTrinhController implements Initializable {
                 }
                 txt_maLichTrinh.setText(maLichTrinh);
                 LocalDateTime thoiGianDen = tinhTGDen();
-                LichTrinh lichTrinh = new LichTrinh("temp", chuyenTau_DAO.getChuyenTauTheoID(soHieuTau), ga_DAO.getGaTheoTenGa(gaDi), ga_DAO.getGaTheoTenGa(gaDen), LocalDateTime.of(ngayKH, LocalTime.of(gio, phut)), thoiGianDen, trangThai.equals("Hoạt động"));
-                if (lichTrinh_DAO.create(lichTrinh)) {
-                    ct_LichTrinh_DAO.addChiTietLichTrinh(maLichTrinh);
+                LichTrinh lichTrinh = new LichTrinh("temp", chuyenTauService.getChuyenTauTheoID(soHieuTau), gaService.getGaTheoTenGa(gaDi), gaService.getGaTheoTenGa(gaDen), LocalDateTime.of(ngayKH, LocalTime.of(gio, phut)), thoiGianDen, trangThai.equals("Hoạt động"));
+                if (lichTrinhService.create(lichTrinh)) {
+                    ct_lichTrinhService.addChiTietLichTrinh(maLichTrinh);
                     list.add(lichTrinh);
                     ObservableList<LichTrinh> updatedList = FXCollections.observableArrayList(list);
                     tbl_lichTrinh.getItems().clear();
@@ -493,8 +721,8 @@ public class LichTrinhController implements Initializable {
 
             LocalDateTime thoiGianDen = tinhTGDen();
 
-            LichTrinh lichTrinhNew = new LichTrinh(maLichTrinh, chuyenTau_DAO.getChuyenTauTheoID(soHieuTau), ga_DAO.getGaTheoTenGa(gaDi), ga_DAO.getGaTheoTenGa(gaDen), LocalDateTime.of(ngayKH, LocalTime.of(gio, phut)), thoiGianDen, trangThai.equals("Hoạt động"));
-            if (lichTrinh_DAO.updateInfo(lichTrinhNew)) {
+            LichTrinh lichTrinhNew = new LichTrinh(maLichTrinh, chuyenTauService.getChuyenTauTheoID(soHieuTau), gaService.getGaTheoTenGa(gaDi), gaService.getGaTheoTenGa(gaDen), LocalDateTime.of(ngayKH, LocalTime.of(gio, phut)), thoiGianDen, trangThai.equals("Hoạt động"));
+            if (lichTrinhService.updateInfo(lichTrinhNew)) {
                 int index = tbl_lichTrinh.getSelectionModel().getSelectedIndex();
                 list.set(index, lichTrinhNew);
                 ObservableList<LichTrinh> updatedList = FXCollections.observableArrayList(list);
@@ -516,7 +744,7 @@ public class LichTrinhController implements Initializable {
             alert.setTitle("Lỗi");
             alert.setHeaderText("Giờ và phút phải là số hợp lệ");
             alert.show();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | RemoteException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Lỗi");
             alert.setHeaderText(e.getMessage());
@@ -524,10 +752,10 @@ public class LichTrinhController implements Initializable {
         }
     }
 
-    protected LocalDateTime tinhTGDen() {
-        double khoangCach = ga_DAO.KhoangCach(ga_DAO.getGaTheoTenGa(cb_infoGaDen.getValue()).getMaGa());
+    protected LocalDateTime tinhTGDen() throws RemoteException {
+        double khoangCach = gaService.KhoangCach(gaService.getGaTheoTenGa(cb_infoGaDen.getValue()).getMaGa());
         if (khoangCach == 0) {
-            khoangCach = ga_DAO.KhoangCach(ga_DAO.getGaTheoTenGa(cb_infoGaDi.getValue()).getMaGa());
+            khoangCach = gaService.KhoangCach(gaService.getGaTheoTenGa(cb_infoGaDi.getValue()).getMaGa());
         }
         double vanToc = cb_soHieuTau.getValue().startsWith("SE") ? 76.58 : 60;
         double thoiGianPhut = (khoangCach / vanToc) * 60;
