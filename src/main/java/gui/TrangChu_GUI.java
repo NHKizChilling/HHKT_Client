@@ -1,6 +1,6 @@
 package gui;
 
-import connectdb.ConnectDB;
+
 import entity.NhanVien;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -35,13 +35,13 @@ public class TrangChu_GUI extends Application {
             alert.showAndWait();
             if (alert.getResult().getText().equals("OK")) {
                 System.exit(0);
-                try {
-                    if (ConnectDB.getConnection() != null) {
-                        ConnectDB.disconnect();
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+//                try {
+//                    if (ConnectDB.getConnection() != null) {
+//                        ConnectDB.disconnect();
+//                    }
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
             } else {
                 e.consume();
             }

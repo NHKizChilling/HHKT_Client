@@ -328,7 +328,7 @@ public class TrangChuController implements Initializable {
             resetFBCTK();
         });
         TrangChu_GUI.nv = getData.nv;
-        lblTenNhanVien.setText("Chào, " + TrangChu_GUI.nv.getChucVu() + " " + TrangChu_GUI.nv.getTenNhanVien());
+        lblTenNhanVien.setText("Chào, " + TrangChu_GUI.nv.getChucVu() + " " + TrangChu_GUI.nv.getTenNV());
 
         // tạo hot key
         paneMain.sceneProperty().addListener((observable, oldScene, newScene) -> {

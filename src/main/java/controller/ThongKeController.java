@@ -102,12 +102,9 @@ public class ThongKeController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
             initServices();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (NotBoundException e) {
-            throw new RuntimeException(e);
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
         }
         try {
             initComponents();
@@ -437,13 +434,13 @@ public class ThongKeController implements Initializable {
         cellTongCong.setCellStyle(style2);
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 1));
 
-        List<HoaDon> listHoaDon = null;
+        List<HoaDon> listHoaDon;
         try {
             listHoaDon = hoaDonService.getDSHDTheoNam(cb_sumNam.getValue());
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
-        double tongDoanhThu = 0;
+        double tongDoanhThu;
         int currentRowIndex = 2;
 
         for (int i = 0; i < listHoaDon.size(); i++) {
