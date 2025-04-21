@@ -5,11 +5,6 @@
  */
 package controller;
 
-import connectdb.ConnectDB;
-import dao.KhuyenMai_DAO;
-import dao.LichTrinh_DAO;
-import dao.NhanVien_DAO;
-import dao.TaiKhoan_DAO;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcons;
 import entity.NhanVien;
@@ -26,8 +21,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import service.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.sql.SQLException;
 
 /*
@@ -56,8 +56,14 @@ public class DangNhapController {
         pwd.setText(txtPwd.getText());
     }
     @FXML
-    protected void onLoginButtonClick() throws SQLException, IOException {
-        ConnectDB.connect();
+
+    LichTrinhService lichTrinh_dao;
+    TaiKhoanService tk_dao;
+    NhanVienService nv_dao;
+    KhuyenMaiService km_dao;
+
+    protected void onLoginButtonClick() throws SQLException, IOException, NotBoundException {
+        initDao();
         String manv = txtTK.getText();
         String pass1 = pwd.getText();
         if(manv == null || manv.isEmpty()) {
@@ -80,7 +86,7 @@ public class DangNhapController {
             }
         }
         else {
-            TaiKhoan taiKhoan = new TaiKhoan_DAO().getTaiKhoanTheoMaNV(manv);
+            TaiKhoan taiKhoan = tk_dao.getTaiKhoanTheoMaNV(manv);
             if(taiKhoan == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setHeaderText(null);
@@ -91,11 +97,10 @@ public class DangNhapController {
             } else {
                 if(taiKhoan.getMatKhau().equals(pass1)) {
                     if(taiKhoan.getTrangThaiTK().equals("Đang hoạt động")) {
-
-                        getData.nv = new NhanVien_DAO().getNhanVien(manv);
-                        new LichTrinh_DAO().updateTrangThaiCT(false);
-                        new KhuyenMai_DAO().kichHoatKhuyenMai();
-                        new KhuyenMai_DAO().khoaKhuyenMai();
+                        getData.nv = nv_dao.getNhanVien(manv);
+                        lichTrinh_dao.updateTrangThaiCT(false);
+                        km_dao.kichHoatKhuyenMai();
+                        km_dao.khoaKhuyenMai();
 
                         FXMLLoader fxmlLoader = new FXMLLoader(TrangChu_GUI.class.getResource("mo-ca.fxml"));
                         FXMLLoader fxmlLoader1 = new FXMLLoader(TrangChu_GUI.class.getResource("loader.fxml"));
@@ -212,12 +217,8 @@ public class DangNhapController {
     }
 
     @FXML
-    protected void quenMatKhau() {
-        try {
-            ConnectDB.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    protected void quenMatKhau() throws MalformedURLException, NotBoundException, RemoteException {
+        initDao();
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Quên mật khẩu");
         alert.setHeaderText(null);
@@ -250,21 +251,28 @@ public class DangNhapController {
             } else if (cccd == null || cccd.isEmpty()) {
 
                 txtCCCD.requestFocus();
-            } else if (new NhanVien_DAO().getNhanVien(manv) == null) {
+            } else if (nv_dao.getNhanVien(manv) == null) {
                 Alert alert1 = new Alert(Alert.AlertType.ERROR);
                 alert1.setHeaderText(null);
                 alert1.setTitle("Quên mật khẩu");
                 alert1.setContentText("Mã nhân viên không tồn tại!");
                 alert1.showAndWait();
             } else {
-                if (new NhanVien_DAO().getNhanVien(manv).getSoCCCD().equals(cccd)) {
+                if (nv_dao.getNhanVien(manv).getSoCCCD().equals(cccd)) {
                     Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
                     alert1.setHeaderText(null);
                     alert1.setTitle("Quên mật khẩu");
-                    alert1.setContentText("Mật khẩu của bạn là: " + new TaiKhoan_DAO().getTaiKhoanTheoMaNV(manv).getMatKhau());
+                    alert1.setContentText("Mật khẩu của bạn là: " + tk_dao.getTaiKhoanTheoMaNV(manv).getMatKhau());
                     alert1.showAndWait();
                 }
             }
         }
+    }
+
+    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
+        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
+        tk_dao = (TaiKhoanService) Naming.lookup("rmi://localhost:9999/TaiKhoan_DAO");
+        nv_dao = (NhanVienService) Naming.lookup("rmi://localhost:9999/NhanVien_DAO");
+        km_dao = (KhuyenMaiService) Naming.lookup("rmi://localhost:9999/KhuyenMai_DAO");
     }
 }

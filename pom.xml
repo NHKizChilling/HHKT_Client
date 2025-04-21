@@ -202,7 +202,16 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/fontawesomefx-8.2.jar</systemPath>
         </dependency>
-
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>20.0.1</version>
+        </dependency>
   </dependencies>
 
   <build>
