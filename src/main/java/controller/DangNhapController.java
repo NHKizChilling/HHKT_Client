@@ -62,7 +62,8 @@ public class DangNhapController {
     NhanVienService nv_dao;
     KhuyenMaiService km_dao;
 
-    protected void onLoginButtonClick() throws SQLException, IOException, NotBoundException {
+
+    public void onLoginButtonClick() throws SQLException, IOException, NotBoundException {
         initDao();
         String manv = txtTK.getText();
         String pass1 = pwd.getText();
