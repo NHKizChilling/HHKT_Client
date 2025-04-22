@@ -28,8 +28,6 @@ public class getData {
     public static ArrayList<ChiTietLichTrinh> dsctlt;
     public static ArrayList<ChiTietLichTrinh> dsctltkh;
     public static List<ChiTietHoaDon> dscthd;
-    public static LocalDateTime gioMoCa;
-    public static HashMap<String, Double> mapLePhi;
-    public static double tienDauCa;
-    public static String ghiChu;
+    public static HashMap<String, Double> mapLePhi;;
+    public static CaLamViec caLamViec;
 }

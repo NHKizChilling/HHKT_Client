@@ -1,10 +1,7 @@
 package controller;
 
 import com.itextpdf.text.DocumentException;
-import entity.ChiTietHoaDon;
-import entity.HoaDon;
-import entity.NhanVien;
-import entity.Ve;
+import entity.*;
 import gui.TrangChu_GUI;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import service.CT_HoaDonService;
+import service.CaLamViecService;
 import service.HoaDonService;
 import service.VeService;
 
@@ -103,6 +101,7 @@ public class KetCaController implements Initializable {
     private HoaDonService hoaDonService;
     private CT_HoaDonService ctHoaDonService;
     private VeService veService;
+    private CaLamViecService caLamViecService;
 
     int soVeBanUI; // Số vé đã bán
     int soVeHuyUI; // Số vé đã hủy
@@ -149,9 +148,19 @@ public class KetCaController implements Initializable {
                 ghiChu = txt_ghiChu.getText();
             }
             try {
-                printPDF.inKetCa(nv, gioBatDau, LocalDateTime.now(), tienDauCa, tongTien,
+                LocalDateTime gioKetCa = LocalDateTime.now();
+
+                printPDF.inKetCa(nv, gioBatDau, gioKetCa, tienDauCa, tongTien,
                                 tienBanVe, tienTraVe, tienTraVeDoi, tienThuVeDoi, ghiChu);
                 closeWindow();
+
+                getData.caLamViec.setGhiChu(ghiChu);
+                getData.caLamViec.setGioKetCa(gioKetCa);
+                getData.caLamViec.setTienKetCa(tongTien);
+                getData.caLamViec.setTrangThaiCa(false);
+
+                caLamViecService.update(getData.caLamViec);
+                getData.caLamViec = null;
             } catch (IOException | DocumentException e) {
                 throw new RuntimeException(e);
             }
@@ -177,8 +186,8 @@ public class KetCaController implements Initializable {
 
     public void setInfo() throws RemoteException {
         nv = getData.nv;
-        gioBatDau = getData.gioMoCa;
-        tienDauCa = getData.tienDauCa;
+        gioBatDau = getData.caLamViec.getGioMoCa();
+        tienDauCa = getData.caLamViec.getTienDauCa();
 
         renderDauCa();
         renderTrongCa();
@@ -342,6 +351,7 @@ public class KetCaController implements Initializable {
             hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/VeService");
             ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
             veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/CaLamViecService");
             printPDF = new PrintPDF();
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();

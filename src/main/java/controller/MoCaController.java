@@ -2,6 +2,7 @@ package controller;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
+import entity.CaLamViec;
 import entity.NhanVien;
 import gui.TrangChu_GUI;
 import javafx.fxml.FXML;
@@ -12,6 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import service.CaLamViecService;
 import service.NhanVienService;
 
 import java.io.IOException;
@@ -47,6 +49,7 @@ public class MoCaController implements Initializable {
     Double tienDauCa;
 
     private NhanVienService nhanVienService;
+    private CaLamViecService caLamViecService;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -122,9 +125,8 @@ public class MoCaController implements Initializable {
                 return;
             }
 
-            getData.tienDauCa = tienDauCa;
-            getData.gioMoCa = LocalDateTime.now();
-            getData.ghiChu = txt_ghiChu.getText();
+            getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
+
             if (getData.nv == null) {
                 try {
                     getData.nv = nhanVienService.getNhanVien(cbNhanVien.getValue().split(" - ")[1]);
@@ -172,13 +174,30 @@ public class MoCaController implements Initializable {
     }
 
     public void setThongTin(NhanVien nv, LocalDateTime gioBatDau) {
-        cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
-        lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(gioBatDau));
-        txt_tienDauCa.requestFocus();
+        CaLamViec caLamViec = null;
+        try {
+            caLamViec = caLamViecService.getCaLamViecMoiNhatCuaNhanVien(nv.getMaNV());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+        if (caLamViec != null && caLamViec.getGioKetCa() == null) {
+            cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
+            lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(caLamViec.getGioMoCa()));
+            txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
+            txt_ghiChu.setText(caLamViec.getGhiChu());
+        } else {
+            cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
+            lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(gioBatDau));
+            txt_tienDauCa.requestFocus();
+        }
+
+
+
     }
 
     private void initService() {
         try {
+            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/CaLamViecService");
             nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();

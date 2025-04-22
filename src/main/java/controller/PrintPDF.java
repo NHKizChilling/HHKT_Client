@@ -979,7 +979,7 @@ public class PrintPDF {
     document.add(new Paragraph("Mã nhân viên: " + nv.getMaNV(), regularFont));
     document.add(new Paragraph("Giờ bắt đầu ca: " + gioBatDau.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")), regularFont));
     document.add(new Paragraph("Tiền đầu ca: " + currencyVN.format(tienDauCa), regularFont));
-    document.add(new Paragraph("Ghi chú đầu ca: " + getData.ghiChu, regularFont));
+    document.add(new Paragraph("Ghi chú đầu ca: " + getData.caLamViec.getGhiChu(), regularFont));
 
     // Add a line separator
     document.add(new Paragraph("------------------------------------------------------------"));
