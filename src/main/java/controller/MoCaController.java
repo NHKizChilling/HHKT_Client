@@ -127,6 +127,15 @@ public class MoCaController implements Initializable {
 
             getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
 
+            getData.caLamViec.setTienKetCa(tienDauCa);
+            getData.caLamViec.setGioKetCa(null);
+
+            try {
+                caLamViecService.create(getData.caLamViec);
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+
             if (getData.nv == null) {
                 try {
                     getData.nv = nhanVienService.getNhanVien(cbNhanVien.getValue().split(" - ")[1]);
@@ -181,6 +190,20 @@ public class MoCaController implements Initializable {
             throw new RuntimeException(e);
         }
         if (caLamViec != null && caLamViec.getGioKetCa() == null) {
+            //nếu giờ hiện tại trừ đi giờ bắt đầu ca lớn hơn 8 tiếng thì không cho mở ca mới
+//            if (LocalDateTime.now().minusHours(8).isAfter(caLamViec.getGioMoCa())) {
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setHeaderText(null);
+//                alert.setTitle("Lỗi");
+//                alert.setContentText("Nhân viên này đã có ca làm việc, vui lòng kết thúc ca trước khi mở ca mới");
+//                alert.showAndWait();
+//                return;
+//            } else {
+//                cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
+//                lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(caLamViec.getGioMoCa()));
+//                txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
+//                txt_ghiChu.setText(caLamViec.getGhiChu());
+//            }
             cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
             lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(caLamViec.getGioMoCa()));
             txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
