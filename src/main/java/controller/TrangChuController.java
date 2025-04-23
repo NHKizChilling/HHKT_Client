@@ -833,11 +833,11 @@ public class TrangChuController implements Initializable {
     }
     public void initService() throws MalformedURLException, NotBoundException, RemoteException {
         try {
-            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
-            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
-            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_lichTrinhService");
-            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDon_DAO");
-            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDon_DAO");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);
