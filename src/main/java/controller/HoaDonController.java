@@ -850,9 +850,9 @@ public class HoaDonController implements Initializable {
             cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
             hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
             toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
-            ltoaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaitoaService");
+            ltoaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaiToaService");
             cnService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/choNgoiService");
-            kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenmaiService");
+            kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
             lvService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/loaiVeService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();

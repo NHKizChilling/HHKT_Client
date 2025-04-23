@@ -187,29 +187,25 @@ public class BanVeController implements Initializable {
     private ObservableList<ChiTietLichTrinh> dsttcn = null;
     private ArrayList<ChiTietLichTrinh> dsctltkh = new ArrayList<>();
 
-    private void initDAO() throws RemoteException, MalformedURLException, NotBoundException {
-        khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
-        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
-        CT_HoaDonService ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
-        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
-        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");
-        toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
-        gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
-        loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaiToaService");
-        choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/choNgoiService");
+    private void initDAO() {
+        try {
+            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+            CT_HoaDonService ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+            loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaiToaService");
+            choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/choNgoiService");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        try {
-            initDAO();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (NotBoundException e) {
-            throw new RuntimeException(e);
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
-        }
+        initDAO();
         tbLT.setItems(null);
         colLT_SoHieu.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSoHieuTau().getSoHieuTau()));
         colLT_SLTrong.setCellValueFactory(cellData -> {
@@ -300,44 +296,9 @@ public class BanVeController implements Initializable {
             }
         });
 
-        ArrayList<Ga> ga = null;
+        List<Ga> ga = null;
         try {
-            ga = (ArrayList<Ga>) new GaService() {
-                @Override
-                public List<Ga> getAllGa() throws RemoteException {
-                    return List.of();
-                }
-
-                @Override
-                public Ga getGaTheoMaGa(String s) throws RemoteException {
-                    return null;
-                }
-
-                @Override
-                public Ga getGaTheoTenGa(String s) throws RemoteException {
-                    return null;
-                }
-
-                @Override
-                public double KhoangCach(String s) throws RemoteException {
-                    return 0;
-                }
-
-                @Override
-                public boolean create(Ga ga) throws RemoteException {
-                    return false;
-                }
-
-                @Override
-                public boolean update(Ga ga) throws RemoteException {
-                    return false;
-                }
-
-                @Override
-                public boolean delete(String s) throws RemoteException {
-                    return false;
-                }
-            }.getAllGa();
+            ga = gaService.getAllGa();
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
@@ -758,8 +719,7 @@ public class BanVeController implements Initializable {
             getData.dsctlt = dsctlt;
             getData.dsctltkh = dsctltkh;
             LocalDateTime now = LocalDateTime.now();
-            now = now.minusNanos(now.getNano());
-            HoaDon hd = new HoaDon("temp");
+            HoaDon hd = new HoaDon("temp", getData.nv, getData.kh, now, null, false);
             try {
                 if (hoaDonService.createTempInvoice(hd)) {
                     //get hóa đơn vừa tạo

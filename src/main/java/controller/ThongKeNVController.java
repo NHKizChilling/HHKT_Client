@@ -72,11 +72,7 @@ public class ThongKeNVController implements Initializable {
         LocalDate currentDate = LocalDate.now();
         try {
             initDAO();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (NotBoundException e) {
-            throw new RuntimeException(e);
-        } catch (RemoteException e) {
+        } catch (MalformedURLException | NotBoundException | RemoteException e) {
             throw new RuntimeException(e);
         }
         try {
@@ -157,11 +153,11 @@ public class ThongKeNVController implements Initializable {
     }
 
     private void initDAO() throws MalformedURLException, NotBoundException, RemoteException {
-        nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/NhanVienService");
-        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-        veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+        nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/nhanVienService");
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+        veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+        gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
     }
 
     private void initComboBox(LocalDate date) {
