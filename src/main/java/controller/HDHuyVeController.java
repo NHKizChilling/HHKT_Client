@@ -244,7 +244,7 @@ public class HDHuyVeController implements Initializable {
         tbl_dsVe.setItems(list);
         col_stt.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(tbl_dsVe.getItems().indexOf(p.getValue()) + 1 + ""));
         col_hoTen.setCellValueFactory(p -> {
-            String ten = p.getValue().getTenKH();
+            String ten = p.getValue().getTenHanhKhach();
             return new SimpleStringProperty(ten);
         });
 

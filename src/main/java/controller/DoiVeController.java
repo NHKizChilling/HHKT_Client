@@ -436,7 +436,7 @@ public class DoiVeController implements Initializable {
             //lấy thông tin vé cũ
             KhachHang kh = ve.getKhachHang();
             LoaiVe lv = ve.getLoaiVe();
-            String tenHK = ve.getTenKH();
+            String tenHK = ve.getTenHanhKhach();
             String soCCCD = ve.getSoCCCD();
             LocalDate dob = ve.getNgaySinh();
             boolean khuHoiMoi = ve.isKhuHoi();
@@ -559,7 +559,7 @@ public class DoiVeController implements Initializable {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             try {
-                return new SimpleStringProperty(  lt.getSoHieuTau() + " - " +gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
+                return new SimpleStringProperty(  lt.getSoHieuTau().getSoHieuTau() + " - " +gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -672,7 +672,7 @@ public class DoiVeController implements Initializable {
                 Label lblTGDen = (Label) pTau.lookup("#lblTGDen");
                 ImageView imgTau = (ImageView) pTau.lookup("#imgTau");
                 imgTau.setId(lt.getMaLichTrinh());
-                lblSoHieuTau.setText(String.valueOf(lt.getSoHieuTau()));
+                lblSoHieuTau.setText(String.valueOf(lt.getSoHieuTau().getSoHieuTau()));
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM HH:mm");
                 lblTGKH.setText(lt.getThoiGianKhoiHanh().format(formatter));
                 lblTGDen.setText(lt.getThoiGianDuKienDen().format(formatter));
@@ -712,7 +712,7 @@ public class DoiVeController implements Initializable {
     private void showToaTheoLT(LichTrinh lt) throws RemoteException {
         chosedId = null;
         grTrain.getChildren().clear();
-        List<Toa> dstoa = toaService.getAllToaTheoChuyenTau(String.valueOf(lt.getSoHieuTau()));
+        List<Toa> dstoa = toaService.getAllToaTheoChuyenTau(String.valueOf(lt.getSoHieuTau().getSoHieuTau()));
         dstoa.sort(Comparator.comparing(Toa::getSttToa).reversed());
         GridPane gridPane = new GridPane();
         paneToa.setCenter(gridPane);

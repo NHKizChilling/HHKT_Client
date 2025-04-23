@@ -367,7 +367,7 @@ public class HDDoiTraVeController implements Initializable {
 
     private void initService() {
         try {
-            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/veService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
             hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
             khuyenMaiService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
             ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");

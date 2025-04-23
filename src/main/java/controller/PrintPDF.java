@@ -104,7 +104,7 @@ public class PrintPDF {
             //Tạo para có ngày giờ
             Paragraph p5 = new Paragraph("Tàu/Train: ", fontContent);
             p5.setAlignment(Element.ALIGN_JUSTIFIED);
-            p5.add(new Chunk(String.valueOf(lt.getSoHieuTau()), fontContentB));
+            p5.add(new Chunk(String.valueOf(lt.getSoHieuTau().getSoHieuTau()), fontContentB));
             //tạo margin bottom
             p5.setSpacingAfter(5);
             document.add(p5);
@@ -145,7 +145,7 @@ public class PrintPDF {
             Paragraph p11 = new Paragraph("Họ tên/Name: ", fontContent);
             p11.setAlignment(Element.ALIGN_LEFT);
             p11.setSpacingAfter(5);
-            p11.add(new Chunk(ve.getTenKH(), fontContentB));
+            p11.add(new Chunk(ve.getTenHanhKhach(), fontContentB));
             document.add(p11);
             //Tạo para có Giấy tờ
             Paragraph p12 = new Paragraph("Giấy tờ/Passport: ", fontContent);
@@ -252,7 +252,7 @@ public class PrintPDF {
             Toa toa = toaService.getToaTheoID(choNgoi.getToa().getMaToa());
             addTableRow(table, regularFont, ++dem + "", cthd.getVe().getMaVe(),
                         "Vé HK: " + lt.getGaDi().getMaGa() + "-" + lt.getGaDen().getMaGa() +
-                        "-" + lt.getSoHieuTau() + "-" + dtf.format(lt.getThoiGianKhoiHanh()) +
+                        "-" + lt.getSoHieuTau().getSoHieuTau() + "-" + dtf.format(lt.getThoiGianKhoiHanh()) +
                         "-" + choNgoi.getSttCho() + "-" + toa.getSttToa() + "-" + toa.getLoaiToa().getMaLoaiToa(),
                         "Vé", "1", df.format(ctlt.getGiaCho()), df.format(cthd.getGiaVe() - 2000), "10%",
                         df.format((cthd.getGiaVe() - 2000) * 1.1));

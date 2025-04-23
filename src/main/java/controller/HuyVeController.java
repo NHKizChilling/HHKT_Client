@@ -291,7 +291,7 @@ public class HuyVeController implements Initializable {
         col_maVe.setCellValueFactory(new PropertyValueFactory<>("maVe"));
 
         col_thongTinHK.setCellValueFactory(p -> {
-            String tenHK = p.getValue().getTenKH();
+            String tenHK = p.getValue().getTenHanhKhach();
             String cccd = p.getValue().getSoCCCD();
             LocalDate ngaySinh = p.getValue().getNgaySinh();
             String s;
@@ -528,7 +528,7 @@ public class HuyVeController implements Initializable {
 
         // col thông tin hành khách chứa TenHK, cccd, sdt
         col_thongTinHK.setCellValueFactory(p -> {
-            String tenHK = p.getValue().getTenKH();
+            String tenHK = p.getValue().getTenHanhKhach();
             String cccd = p.getValue().getSoCCCD();
             String ngaySinh = p.getValue().getNgaySinh() != null ? p.getValue().getNgaySinh().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : null;
             String s;

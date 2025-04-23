@@ -261,7 +261,7 @@ public class QLyHoaDonController implements Initializable {
             ChiTietHoaDon cthd = tbCTHD.getSelectionModel().getSelectedItem();
             txtMaVe.setText(cthd.getVe().getMaVe());
             try {
-                txtTenHK.setText(veService.getVeTheoID(cthd.getVe().getMaVe()).getTenKH());
+                txtTenHK.setText(veService.getVeTheoID(cthd.getVe().getMaVe()).getTenHanhKhach());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -276,7 +276,7 @@ public class QLyHoaDonController implements Initializable {
         });
         //Bảng hd
         colSTT.setCellValueFactory(p -> new SimpleIntegerProperty(tbhd.getItems().indexOf(p.getValue()) + 1).asObject());
-        colMaHD.setCellValueFactory(new PropertyValueFactory<>("maHoaDon"));
+        colMaHD.setCellValueFactory(new PropertyValueFactory<>("maHD"));
         colNgayLapHD.setCellValueFactory(p -> new SimpleStringProperty(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(p.getValue().getNgayLapHoaDon())));
         colKH.setCellValueFactory(p -> {
             try {

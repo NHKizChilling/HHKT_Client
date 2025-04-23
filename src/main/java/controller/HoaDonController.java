@@ -401,23 +401,27 @@ public class HoaDonController implements Initializable {
                 if (dsctlt.size() >= i) {
                     Ve ve = null;
                     try {
-                        ve = new Ve("temp" + i, getData.kh, dsctlt.get(i - 1), lvService.getLoaiVeTheoTen(cbLoaiVe.getValue()), txtTenHK.getText(), txtSoCCCD.getText(), dpNgaySinh.getValue(), "DaBan", false);
+                        ve = new Ve(veService.getAutoGenerateID(), getData.kh, dsctlt.get(i - 1), lvService.getLoaiVeTheoTen(cbLoaiVe.getValue()), txtTenHK.getText(), txtSoCCCD.getText(), dpNgaySinh.getValue(), "DaBan", false);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
                     dsve.add(ve);
                     ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve);
+                    cthd.tinhGiaVe();
+                    cthd.tinhGiaGiam();
                     dscthd.add(cthd);
                 }
                 if (dsctltkh.size() >= i) {
                     Ve vekh = null;
                     try {
-                        vekh = new Ve("tempkh" + i, getData.kh, dsctltkh.get(i - 1), lvService.getLoaiVeTheoTen(cbLoaiVe.getValue()), txtTenHK.getText(), txtSoCCCD.getText(), dpNgaySinh.getValue(), "DaBan", true);
+                        vekh = new Ve(veService.getAutoGenerateID(), getData.kh, dsctltkh.get(i - 1), lvService.getLoaiVeTheoTen(cbLoaiVe.getValue()), txtTenHK.getText(), txtSoCCCD.getText(), dpNgaySinh.getValue(), "DaBan", true);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
                     dsve.add(vekh);
                     ChiTietHoaDon cthdkh = new ChiTietHoaDon(hd, vekh);
+                    cthdkh.tinhGiaVe();
+                    cthdkh.tinhGiaGiam();
                     dscthd.add(cthdkh);
                 }
                 if (i < dsctlt.size()) {
@@ -467,7 +471,7 @@ public class HoaDonController implements Initializable {
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
-                    ve.setTenKH(txtTenHK.getText());
+                    ve.setTenHanhKhach(txtTenHK.getText());
                     ve.setSoCCCD(txtSoCCCD.getText());
                     ve.setNgaySinh(dpNgaySinh.getValue());
                     dsve.set(k, ve);
@@ -528,15 +532,14 @@ public class HoaDonController implements Initializable {
             getData.hd = hd;
             try {
                 if(hdService.update(hd)) {
-                    ArrayList<Ve> list = new ArrayList<>();
                     ArrayList<ChiTietHoaDon> listcthd_new = new ArrayList<>();
                     for (Ve ve : dsve) {
                         ctltService.updateCTLT(ve.getChiTietLichTrinh(), false);
                         veService.create(ve);
-                        Ve v_new = veService.getLaiVe();
-                        ve.setMaVe(v_new.getMaVe());
-                        list.add(ve);
-                        listcthd_new.add(new ChiTietHoaDon(hd, ve));
+                        ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve);
+                        cthd.tinhGiaVe();
+                        cthd.tinhGiaGiam();
+                        listcthd_new.add(cthd);
                     }
                     for (ChiTietHoaDon cthd : listcthd_new) {
                         cthdService.create(cthd);
@@ -547,7 +550,6 @@ public class HoaDonController implements Initializable {
                     alert.setTitle("Thông báo");
                     alert.setHeaderText("Lưu tạm hóa đơn thành công");
                     alert.showAndWait();
-                    getData.dsve = list;
                     getData.dscthd = listcthd_new;
                 }
             } catch (RemoteException e) {
@@ -562,7 +564,7 @@ public class HoaDonController implements Initializable {
                 Ve ve = dsve.get(s);
                 cbLoaiVe.setValue(ve.getLoaiVe().getTenLoaiVe());
                 if (!txtTenHK.isDisable()) {
-                    txtTenHK.setText(ve.getTenKH());
+                    txtTenHK.setText(ve.getTenHanhKhach());
                 } else {
                     txtTenHK.clear();
                 }
@@ -611,15 +613,14 @@ public class HoaDonController implements Initializable {
                 getData.hd = hd;
                 try {
                     if(hdService.update(hd)) {
-                        ArrayList<Ve> list = new ArrayList<>();
                         ArrayList<ChiTietHoaDon> listcthd_new = new ArrayList<>();
                         for (Ve ve : dsve) {
                             ctltService.updateCTLT(ve.getChiTietLichTrinh(), false);
                             veService.create(ve);
-                            Ve v_new = veService.getLaiVe();
-                            ve.setMaVe(v_new.getMaVe());
-                            list.add(ve);
-                            listcthd_new.add(new ChiTietHoaDon(hd, ve));
+                            ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve);
+                            cthd.tinhGiaVe();
+                            cthd.tinhGiaGiam();
+                            listcthd_new.add(cthd);
                         }
                         if (cthdService.getCT_HoaDon(hd.getMaHD()).isEmpty()) {
                             for (ChiTietHoaDon cthd : listcthd_new) {
@@ -633,7 +634,6 @@ public class HoaDonController implements Initializable {
                         btnThanhToan.setDisable(true);
                         btnLuuTamHD.setDisable(true);
                         alert.showAndWait();
-                        getData.dsve = list;
                         getData.dscthd = listcthd_new;
                     }
                 } catch (RemoteException e) {

@@ -403,7 +403,7 @@ public class TrangChuController implements Initializable {
                 List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = cthd.getVe();
                         veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
                         ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }
@@ -432,7 +432,7 @@ public class TrangChuController implements Initializable {
                 List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = cthd.getVe();
                         veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
                         ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }
