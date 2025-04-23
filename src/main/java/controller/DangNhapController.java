@@ -57,14 +57,15 @@ public class DangNhapController {
     }
     @FXML
 
-    LichTrinhService lichTrinh_dao;
-    TaiKhoanService tk_dao;
-    NhanVienService nv_dao;
-    KhuyenMaiService km_dao;
+    protected LichTrinhService lichTrinhService;
+    private TaiKhoanService tkService;
+    private NhanVienService nvService;
+    private KhuyenMaiService kmService;
 
 
     public void onLoginButtonClick() throws SQLException, IOException, NotBoundException {
-        initDao();
+
+        initService();
         String manv = txtTK.getText();
         String pass1 = pwd.getText();
         if(manv == null || manv.isEmpty()) {
@@ -87,7 +88,7 @@ public class DangNhapController {
             }
         }
         else {
-            TaiKhoan taiKhoan = tk_dao.getTaiKhoanTheoMaNV(manv);
+            TaiKhoan taiKhoan = tkService.getTaiKhoanTheoMaNV(manv);
             if(taiKhoan == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setHeaderText(null);
@@ -98,10 +99,10 @@ public class DangNhapController {
             } else {
                 if(taiKhoan.getMatKhau().equals(pass1)) {
                     if(taiKhoan.getTrangThaiTK().equals("Đang hoạt động")) {
-                        getData.nv = nv_dao.getNhanVien(manv);
-                        lichTrinh_dao.updateTrangThaiCT(false);
-                        km_dao.kichHoatKhuyenMai();
-                        km_dao.khoaKhuyenMai();
+                        getData.nv = nvService.getNhanVien(manv);
+                        lichTrinhService.updateTrangThaiCT(false);
+                        kmService.kichHoatKhuyenMai();
+                        kmService.khoaKhuyenMai();
 
                         FXMLLoader fxmlLoader = new FXMLLoader(TrangChu_GUI.class.getResource("mo-ca.fxml"));
                         FXMLLoader fxmlLoader1 = new FXMLLoader(TrangChu_GUI.class.getResource("loader.fxml"));
@@ -219,7 +220,7 @@ public class DangNhapController {
 
     @FXML
     protected void quenMatKhau() throws MalformedURLException, NotBoundException, RemoteException {
-        initDao();
+        initService();
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Quên mật khẩu");
         alert.setHeaderText(null);
@@ -252,28 +253,33 @@ public class DangNhapController {
             } else if (cccd == null || cccd.isEmpty()) {
 
                 txtCCCD.requestFocus();
-            } else if (nv_dao.getNhanVien(manv) == null) {
+            } else if (nvService.getNhanVien(manv) == null) {
                 Alert alert1 = new Alert(Alert.AlertType.ERROR);
                 alert1.setHeaderText(null);
                 alert1.setTitle("Quên mật khẩu");
                 alert1.setContentText("Mã nhân viên không tồn tại!");
                 alert1.showAndWait();
             } else {
-                if (nv_dao.getNhanVien(manv).getSoCCCD().equals(cccd)) {
+                if (nvService.getNhanVien(manv).getSoCCCD().equals(cccd)) {
                     Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
                     alert1.setHeaderText(null);
                     alert1.setTitle("Quên mật khẩu");
-                    alert1.setContentText("Mật khẩu của bạn là: " + tk_dao.getTaiKhoanTheoMaNV(manv).getMatKhau());
+                    alert1.setContentText("Mật khẩu của bạn là: " + tkService.getTaiKhoanTheoMaNV(manv).getMatKhau());
                     alert1.showAndWait();
                 }
             }
         }
     }
 
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
-        tk_dao = (TaiKhoanService) Naming.lookup("rmi://localhost:9999/TaiKhoan_DAO");
-        nv_dao = (NhanVienService) Naming.lookup("rmi://localhost:9999/NhanVien_DAO");
-        km_dao = (KhuyenMaiService) Naming.lookup("rmi://localhost:9999/KhuyenMai_DAO");
+    public void initService() throws MalformedURLException, NotBoundException, RemoteException {
+        try {
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/TaiKhoan_DAO");
+            nvService = (NhanVienService) Naming.lookup("rmi://localhost:7701/NhanVien_DAO");
+            kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/KhuyenMai_DAO");
+        }catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 }

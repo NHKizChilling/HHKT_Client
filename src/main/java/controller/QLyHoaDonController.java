@@ -172,23 +172,23 @@ public class QLyHoaDonController implements Initializable {
     private List<ChiTietHoaDon> listCTHD = new ArrayList<>();
 
 
-    VeService ve_dao;
-    GaService ga_dao;
-    CT_LichTrinhService ctlt_dao;
-    CT_HoaDonService cthd_dao;
-    HoaDonService hd_dao;
-    ToaService toa_dao;
-    LoaiToaService ltoa_dao;
-    ChoNgoiService cn_dao;
-    LoaiVeService lv_dao;
-    LichTrinhService lichTrinh_dao;
-    KhachHangService kh_dao;
+    private VeService veService;
+    private GaService gaService;
+    private CT_LichTrinhService ctltService;
+    private CT_HoaDonService cthdService;
+    private HoaDonService hdService;
+    private ToaService toaService;
+    private LoaiToaService ltoaService;
+    private ChoNgoiService cnService;
+    private LoaiVeService lvService;
+    private LichTrinhService lichTrinhService;
+    private KhachHangService khService;
 
 
     @SneakyThrows
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        initDao();
+        initService();
         NumberFormat nf = DecimalFormat.getCurrencyInstance(Locale.of("vi", "VN"));
         cbLoaiVe.getItems().addAll("Người lớn", "Trẻ em", "Học sinh, sinh viên", "Người cao tuổi");
         //Bảng cthd
@@ -197,13 +197,13 @@ public class QLyHoaDonController implements Initializable {
             Ve ve = param.getValue().getVe();
             LichTrinh lt = null;
             try {
-                lt = lichTrinh_dao.getLichTrinhTheoID(ve_dao.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+                lt = lichTrinhService.getLichTrinhTheoID(veService.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             try {
-                return new SimpleStringProperty(  lt.getSoHieuTau().getSoHieuTau()+ " - " + ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
+                return new SimpleStringProperty(  lt.getSoHieuTau().getSoHieuTau()+ " - " + gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -213,12 +213,12 @@ public class QLyHoaDonController implements Initializable {
             Ve ve = param.getValue().getVe();
             ChoNgoi cn = null;
             try {
-                cn = cn_dao.getChoNgoiTheoMa(ve_dao.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getChoNgoi().getMaCho());
+                cn = cnService.getChoNgoiTheoMa(veService.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getChoNgoi().getMaCho());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             try {
-                return new SimpleStringProperty(ltoa_dao.getLoaiToaTheoMa(toa_dao.getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                return new SimpleStringProperty(ltoaService.getLoaiToaTheoMa(toaService.getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -227,13 +227,13 @@ public class QLyHoaDonController implements Initializable {
         colLoaiVe.setCellValueFactory(param -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(param.getValue().getVe().getMaVe());
+                ve = veService.getVeTheoID(param.getValue().getVe().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
 
             try {
-                return new SimpleStringProperty(lv_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+                return new SimpleStringProperty(lvService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -242,13 +242,13 @@ public class QLyHoaDonController implements Initializable {
         colGiaVe.setCellValueFactory(param -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(param.getValue().getVe().getMaVe());
+                ve = veService.getVeTheoID(param.getValue().getVe().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             ChiTietLichTrinh ctlt = null;
             try {
-                ctlt = ctlt_dao.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+                ctlt = ctltService.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -262,12 +262,12 @@ public class QLyHoaDonController implements Initializable {
             ChiTietHoaDon cthd = tbCTHD.getSelectionModel().getSelectedItem();
             txtMaVe.setText(cthd.getVe().getMaVe());
             try {
-                txtTenHK.setText(ve_dao.getVeTheoID(cthd.getVe().getMaVe()).getTenKH());
+                txtTenHK.setText(veService.getVeTheoID(cthd.getVe().getMaVe()).getTenKH());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             try {
-                cbLoaiVe.setValue(lv_dao.getLoaiVeTheoMa(ve_dao.getVeTheoID(cthd.getVe().getMaVe()).getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+                cbLoaiVe.setValue(lvService.getLoaiVeTheoMa(veService.getVeTheoID(cthd.getVe().getMaVe()).getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -281,14 +281,14 @@ public class QLyHoaDonController implements Initializable {
         colNgayLapHD.setCellValueFactory(p -> new SimpleStringProperty(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(p.getValue().getNgayLapHoaDon())));
         colKH.setCellValueFactory(p -> {
             try {
-                return new SimpleStringProperty(kh_dao.getKhachHangTheoMaKH(p.getValue().getKhachHang().getMaKH()).getTenKH());
+                return new SimpleStringProperty(khService.getKhachHangTheoMaKH(p.getValue().getKhachHang().getMaKH()).getTenKH());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
         });
         colSLVe.setCellValueFactory(p -> {
             try {
-                listCTHD = cthd_dao.getCT_HoaDon(p.getValue().getMaHD());
+                listCTHD = cthdService.getCT_HoaDon(p.getValue().getMaHD());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -296,7 +296,7 @@ public class QLyHoaDonController implements Initializable {
         });
         colTienVe.setCellValueFactory(p -> {
             try {
-                listCTHD = cthd_dao.getCT_HoaDon(p.getValue().getMaHD());
+                listCTHD = cthdService.getCT_HoaDon(p.getValue().getMaHD());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -314,7 +314,7 @@ public class QLyHoaDonController implements Initializable {
             if (hd != null) {
                 txtMaHD.setText(hd.getMaHD());
                 try {
-                    txtTenKH.setText(kh_dao.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH()).getTenKH());
+                    txtTenKH.setText(khService.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH()).getTenKH());
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
@@ -362,7 +362,7 @@ public class QLyHoaDonController implements Initializable {
         radioHDLuuTam.setOnAction(event -> {
             lamMoi();
             try {
-                listHD = hd_dao.getDSHDLuuTam();
+                listHD = hdService.getDSHDLuuTam();
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -375,7 +375,7 @@ public class QLyHoaDonController implements Initializable {
             if (txtTimKiem.getText() == null || txtTimKiem.getText().isEmpty())  {
                 lamMoi();
                 try {
-                    listHD = hd_dao.getDSHDTheoNgay(LocalDate.from(LocalDateTime.now()));
+                    listHD = hdService.getDSHDTheoNgay(LocalDate.from(LocalDateTime.now()));
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
@@ -389,7 +389,7 @@ public class QLyHoaDonController implements Initializable {
             HoaDon hd = tbhd.getSelectionModel().getSelectedItem();
             List<ChiTietHoaDon> dscthd = null;
             try {
-                dscthd = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                dscthd = cthdService.getCT_HoaDon(hd.getMaHD());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -399,7 +399,7 @@ public class QLyHoaDonController implements Initializable {
                 for (ChiTietHoaDon cthd : dscthd) {
                     Ve ve = null;
                     try {
-                        ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                        ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -446,7 +446,7 @@ public class QLyHoaDonController implements Initializable {
                 for (ChiTietHoaDon cthd1 : listCTHD) {
                     Ve ve = null;
                     try {
-                        ve = ve_dao.getVeTheoID(cthd1.getVe().getMaVe());
+                        ve = veService.getVeTheoID(cthd1.getVe().getMaVe());
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -455,7 +455,7 @@ public class QLyHoaDonController implements Initializable {
             } else {
                 Ve ve = null;
                 try {
-                    ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                    ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
@@ -471,7 +471,7 @@ public class QLyHoaDonController implements Initializable {
         btnChiTiet.setOnAction(event -> {
             HoaDon hd = tbhd.getSelectionModel().getSelectedItem();
             try {
-                listCTHD = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                listCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -486,13 +486,13 @@ public class QLyHoaDonController implements Initializable {
             HoaDon hd = tbhd.getSelectionModel().getSelectedItem();
             getData.hd = hd;
             try {
-                getData.kh = kh_dao.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH());
+                getData.kh = khService.getKhachHangTheoMaKH(hd.getKhachHang().getMaKH());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             List<ChiTietHoaDon> dscthd = null;
             try {
-                dscthd = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                dscthd = cthdService.getCT_HoaDon(hd.getMaHD());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -501,17 +501,17 @@ public class QLyHoaDonController implements Initializable {
             for (ChiTietHoaDon cthd : dscthd) {
                 Ve ve = null;
                 try {
-                    ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
+                    ve = veService.getVeTheoID(cthd.getVe().getMaVe());
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
                 try {
-                    ve.setChiTietLichTrinh(ctlt_dao.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho()));
+                    ve.setChiTietLichTrinh(ctltService.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho()));
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
                 try {
-                    ve.setLoaiVe(lv_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()));
+                    ve.setLoaiVe(lvService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()));
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
@@ -609,9 +609,9 @@ public class QLyHoaDonController implements Initializable {
             txtTimKiem.requestFocus();
         } else {
             if (radioHDTrongNgay.isSelected()) {
-                HoaDon hd = hd_dao.getHoaDonTheoMa(ma);
+                HoaDon hd = hdService.getHoaDonTheoMa(ma);
                 if (hd == null) {
-                    listHD = hd_dao.getHoaDonTheoKH(ma);
+                    listHD = hdService.getHoaDonTheoKH(ma);
                     listHD.removeIf(hd1 -> !hd1.getNgayLapHoaDon().toLocalDate().isEqual(LocalDateTime.now().toLocalDate()));
                     if (listHD.isEmpty()) {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -639,9 +639,9 @@ public class QLyHoaDonController implements Initializable {
                     }
                 }
             } else {
-                HoaDon hd = hd_dao.getHoaDonTheoMa(ma);
+                HoaDon hd = hdService.getHoaDonTheoMa(ma);
                 if (hd == null) {
-                    listHD = hd_dao.getHoaDonTheoKH(ma);
+                    listHD = hdService.getHoaDonTheoKH(ma);
                     if (listHD.isEmpty()) {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Lỗi");
@@ -660,15 +660,22 @@ public class QLyHoaDonController implements Initializable {
             }
         }
     }
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
-        ve_dao = (VeService) Naming.lookup("rmi://localhost:9999/Ve_DAO");
-        ga_dao = (GaService) Naming.lookup("rmi://localhost:9999/Ga_DAO");
-        ctlt_dao = (CT_LichTrinhService) Naming.lookup("rmi://localhost:9999/CT_LichTrinh_DAO");
-        cthd_dao = (CT_HoaDonService) Naming.lookup("rmi://localhost:9999/CT_HoaDon_DAO");
-        hd_dao = (HoaDonService) Naming.lookup("rmi://localhost:9999/HoaDon_DAO");
-        toa_dao = (ToaService) Naming.lookup("rmi://localhost:9999/Toa_DAO");
-        ltoa_dao = (LoaiToaService) Naming.lookup("rmi://localhost:9999/LoaiToa_DAO");
-        cn_dao = (ChoNgoiService) Naming.lookup("rmi://localhost:9999/ChoNgoi_DAO");
+    public void initService() throws MalformedURLException, NotBoundException, RemoteException {
+        try {
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_lichTrinhService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDon_DAO");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDon_DAO");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
+            ltoaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaitoaService");
+            cnService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoi_DAO");
+            lvService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVe_DAO");
+            khService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+        }catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 }

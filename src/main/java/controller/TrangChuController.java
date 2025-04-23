@@ -152,11 +152,11 @@ public class TrangChuController implements Initializable {
     private FontAwesomeIcon iconKM;
 
 
-    VeService ve_dao;
-    CT_LichTrinhService ctlt_dao;
-    CT_HoaDonService cthd_dao;
-    HoaDonService hd_dao;
-    LichTrinhService lichTrinh_dao;
+    private VeService veService;
+    private CT_LichTrinhService ctltService;
+    private CT_HoaDonService cthdService;
+    private HoaDonService hdService;
+    private LichTrinhService lichTrinhService;
 
 
     Time time = new Time(DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.now()));
@@ -172,7 +172,7 @@ public class TrangChuController implements Initializable {
     @SneakyThrows
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        initDao();
+        initService();
         if (Objects.equals(getData.nv.getChucVu(), "Nhân viên")) {
             acpNV.setDisable(false);
             acpQL.setDisable(true);
@@ -208,7 +208,7 @@ public class TrangChuController implements Initializable {
         btnTKNV.setOnMouseClicked(e -> chooseFeatureButtonLV2(btnTKNV));
         btnFVe.setOnMouseClicked(e -> {
             try {
-                lichTrinh_dao.updateTrangThaiCT(false);
+                lichTrinhService.updateTrangThaiCT(false);
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -396,16 +396,16 @@ public class TrangChuController implements Initializable {
             e.printStackTrace();
         }
 
-        List<HoaDon> dsHD = hd_dao.getDSHDLuuTam();
+        List<HoaDon> dsHD = hdService.getDSHDLuuTam();
         for (HoaDon hd : dsHD) {
             //Xóa hóa đơn lưu hơn 15 phút
             if (hd.getNgayLapHoaDon().plusMinutes(15).isBefore(LocalDateTime.now())) {
-                List<ChiTietHoaDon> dsCTHD = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
-                        ve_dao.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
-                        ctlt_dao.updateCTLT(ve.getChiTietLichTrinh(), true);
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
+                        ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }
                 }
             }
@@ -425,16 +425,16 @@ public class TrangChuController implements Initializable {
             e.printStackTrace();
         }
 
-        List<HoaDon> dsHD = hd_dao.getDSHDLuuTam();
+        List<HoaDon> dsHD = hdService.getDSHDLuuTam();
         for (HoaDon hd : dsHD) {
             //Xóa hóa đơn lưu hơn 15 phút
             if (hd.getNgayLapHoaDon().plusMinutes(15).isBefore(LocalDateTime.now())) {
-                List<ChiTietHoaDon> dsCTHD = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
-                        ve_dao.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
-                        ctlt_dao.updateCTLT(ve.getChiTietLichTrinh(), true);
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
+                        ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }
                 }
             }
@@ -454,16 +454,16 @@ public class TrangChuController implements Initializable {
             e.printStackTrace();
         }
 
-        List<HoaDon> dsHD = hd_dao.getDSHDLuuTam();
+        List<HoaDon> dsHD = hdService.getDSHDLuuTam();
         for (HoaDon hd : dsHD) {
             //Xóa hóa đơn lưu hơn 15 phút
             if (hd.getNgayLapHoaDon().plusMinutes(15).isBefore(LocalDateTime.now())) {
-                List<ChiTietHoaDon> dsCTHD = cthd_dao.getCT_HoaDon(hd.getMaHD());
+                List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = ve_dao.getVeTheoID(cthd.getVe().getMaVe());
-                        ve_dao.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
-                        ctlt_dao.updateCTLT(ve.getChiTietLichTrinh(), true);
+                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
+                        ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }
                 }
             }
@@ -831,11 +831,16 @@ public class TrangChuController implements Initializable {
             }
         });
     }
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
-        ve_dao = (VeService) Naming.lookup("rmi://localhost:9999/Ve_DAO");
-        ctlt_dao = (CT_LichTrinhService) Naming.lookup("rmi://localhost:9999/CT_LichTrinh_DAO");
-        cthd_dao = (CT_HoaDonService) Naming.lookup("rmi://localhost:9999/CT_HoaDon_DAO");
-        hd_dao = (HoaDonService) Naming.lookup("rmi://localhost:9999/HoaDon_DAO");
+    public void initService() throws MalformedURLException, NotBoundException, RemoteException {
+        try {
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_lichTrinhService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDon_DAO");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDon_DAO");
+        }catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 }

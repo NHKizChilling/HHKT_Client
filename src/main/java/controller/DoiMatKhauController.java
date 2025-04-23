@@ -53,12 +53,12 @@ public class DoiMatKhauController implements Initializable {
     @FXML
     private PasswordField pwdOld;
 
-    TaiKhoanService tk_dao;
+    private TaiKhoanService tkService;
 
     @SneakyThrows
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        initDao();
+        initService();
         NhanVien nhanVien = getData.nv;
         lblMaNV.setText(nhanVien.getMaNV());
         lblHoNV.setText(nhanVien.getTenNV());
@@ -141,9 +141,9 @@ public class DoiMatKhauController implements Initializable {
                 return;
             }
             try {
-                if (oldPass.equals(tk_dao.getTaiKhoanTheoMaNV(nhanVien.getMaNV()).getMatKhau())) {
+                if (oldPass.equals(tkService.getTaiKhoanTheoMaNV(nhanVien.getMaNV()).getMatKhau())) {
                     if (newPass.equals(confirmPass)) {
-                        if (tk_dao.doiMatKhau(nhanVien.getMaNV(), newPass)) {
+                        if (tkService.doiMatKhau(nhanVien.getMaNV(), newPass)) {
                             Alert alert = new Alert(Alert.AlertType.INFORMATION);
                             alert.setTitle("Thành công");
                             alert.setHeaderText(null);
@@ -187,7 +187,12 @@ public class DoiMatKhauController implements Initializable {
         });
     }
 
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        tk_dao = (TaiKhoanService) Naming.lookup("rmi://localhost:9999/TaiKhoanService");
+    public void initService() throws MalformedURLException, NotBoundException, RemoteException {
+        try {
+            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/TaiKhoanService");
+        }catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 }

@@ -48,16 +48,16 @@ public class GioiThieuController implements Initializable {
     @FXML
     private Label lblSLVe;
 
-    VeService ve_dao;
-    CT_HoaDonService cthd_dao;
-    HoaDonService hd_dao;
-    LichTrinhService lichTrinh_dao;
+    private VeService veService;
+    private CT_HoaDonService cthdService;
+    private HoaDonService hdService;
+    private LichTrinhService lichTrinhService;
 
     @SneakyThrows
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        initDao();
-        List<LichTrinh> list = lichTrinh_dao.traCuuDSLichTrinhTheoNgay(LocalDate.now());
+        initService();
+        List<LichTrinh> list = lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.now());
         list.removeIf(lt -> !lt.getThoiGianKhoiHanh().isAfter(LocalDateTime.now()));
         ObservableList<XYChart.Data<String, Integer>> data = FXCollections.observableArrayList();
         Set<String> set = new HashSet<>();
@@ -69,20 +69,20 @@ public class GioiThieuController implements Initializable {
             if (set.contains(lt.getSoHieuTau().getSoHieuTau())) {
                 continue;
             }
-            data.add(new XYChart.Data<>(lt.getSoHieuTau().getSoHieuTau(), lichTrinh_dao.getSoLuongChoConTrong(lt.getMaLichTrinh()).intValue()));
+            data.add(new XYChart.Data<>(lt.getSoHieuTau().getSoHieuTau(), lichTrinhService.getSoLuongChoConTrong(lt.getMaLichTrinh()).intValue()));
             set.add(lt.getSoHieuTau().getSoHieuTau());
             dem++;
         }
-        List<HoaDon> dshd = hd_dao.getHoaDonTheoNV(getData.nv.getMaNV(), LocalDate.from(LocalDateTime.now()));
+        List<HoaDon> dshd = hdService.getHoaDonTheoNV(getData.nv.getMaNV(), LocalDate.from(LocalDateTime.now()));
         int slVe = 0;
         double doanhThu = 0;
         for (HoaDon hd : dshd) {
             if (!hd.isTrangThai()) {
                 continue;
             }
-            List<ChiTietHoaDon> dscthd = cthd_dao.getCT_HoaDon(hd.getMaHD());
+            List<ChiTietHoaDon> dscthd = cthdService.getCT_HoaDon(hd.getMaHD());
             for (ChiTietHoaDon ct : dscthd) {
-                Ve ve = ve_dao.getVeTheoID(ct.getVe().getMaVe());
+                Ve ve = veService.getVeTheoID(ct.getVe().getMaVe());
                 if (ve.getTinhTrangVe().equals("DaBan")) {
                     slVe++;
                 }
@@ -94,10 +94,15 @@ public class GioiThieuController implements Initializable {
         lblSLChuyenTau.setText(dem + "");
         chartChuyenTau.getData().add(new XYChart.Series<>("Số lượng chỗ ngồi còn trống", data));
     }
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
-        ve_dao = (VeService) Naming.lookup("rmi://localhost:9999/Ve_DAO");
-        cthd_dao = (CT_HoaDonService) Naming.lookup("rmi://localhost:9999/CT_HoaDon_DAO");
-        hd_dao = (HoaDonService) Naming.lookup("rmi://localhost:9999/HoaDon_DAO");
+    public void initService() throws MalformedURLException, NotBoundException, RemoteException {
+        try {
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDon_DAO");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDon_DAO");
+        }catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 }
