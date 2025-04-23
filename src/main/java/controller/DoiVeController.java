@@ -140,17 +140,17 @@ public class DoiVeController implements Initializable {
     private JFXButton btn_doiVe;
 
 
-    VeService ve_dao;
-    GaService ga_dao;
-    CT_LichTrinhService ctlt_dao;
-    CT_HoaDonService cthd_dao;
-    HoaDonService hd_dao;
-    ToaService toa_dao;
-    LoaiToaService ltoa_dao;
-    ChoNgoiService cn_dao;
-    LoaiVeService lv_dao;
-    LichTrinhService lichTrinh_dao;
-    KhachHangService kh_dao;
+    private VeService veService;
+    private GaService gaService;
+    private CT_LichTrinhService ctltService;
+    private CT_HoaDonService cthdService;
+    private HoaDonService hdService;
+    private ToaService toaService;
+    private LoaiToaService ltoaService;
+    private ChoNgoiService cnService;
+    private LoaiVeService lvService;
+    private LichTrinhService lichTrinhService;
+    private KhachHangService khService;
 
     private Ve ve;
     private String chosedId;
@@ -165,7 +165,7 @@ public class DoiVeController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // TODO
-        initDao();
+        initService();
         cb_search.getItems().addAll("Mã khách hàng", "Mã vé", "Mã hóa đơn");
         cb_search.setOnAction(e -> {
             btnQuetMaVe.setDisable(cb_search.getValue() == null || !cb_search.getValue().equalsIgnoreCase("Mã vé"));
@@ -260,14 +260,14 @@ public class DoiVeController implements Initializable {
             List<Ve> listVe = new ArrayList<>();
             if (cb_search.getValue().equalsIgnoreCase("Mã khách hàng")) {
                 try {
-                    listVe = ve_dao.getDSVeTheoMaKH(search);
+                    listVe = veService.getDSVeTheoMaKH(search);
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
             } else if (cb_search.getValue().equalsIgnoreCase("Mã vé")) {
                 Ve ve = null;
                 try {
-                    ve = ve_dao.getVeTheoID(search);
+                    ve = veService.getVeTheoID(search);
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -277,9 +277,9 @@ public class DoiVeController implements Initializable {
             } else if (cb_search.getValue().equalsIgnoreCase("Mã hóa đơn")) {
                 List<Ve> finalListVe = listVe;
                 try {
-                    cthd_dao.getCT_HoaDon(search).forEach(cthd -> {
+                    cthdService.getCT_HoaDon(search).forEach(cthd -> {
                         try {
-                            finalListVe.add(ve_dao.getVeTheoID(cthd.getVe().getMaVe()));
+                            finalListVe.add(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         } catch (RemoteException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -310,12 +310,12 @@ public class DoiVeController implements Initializable {
                     String maVe = ve.getMaVe();
                     ChiTietHoaDon cthd = null;
                     try {
-                        cthd = cthd_dao.getCT_HoaDonTheoMaVe(maVe);
+                        cthd = cthdService.getCT_HoaDonTheoMaVe(maVe);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
                     try {
-                        HoaDon hd = hd_dao.getHoaDonTheoMa(cthd.getHoaDon().getMaHD());
+                        HoaDon hd = hdService.getHoaDonTheoMa(cthd.getHoaDon().getMaHD());
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -323,7 +323,7 @@ public class DoiVeController implements Initializable {
                     String maLichTrinh = ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh();
                     LichTrinh lt = null;
                     try {
-                        lt = lichTrinh_dao.getLichTrinhTheoID(maLichTrinh);
+                        lt = lichTrinhService.getLichTrinhTheoID(maLichTrinh);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -353,19 +353,19 @@ public class DoiVeController implements Initializable {
             }
             LichTrinh lt = null;
             try {
-                lt = lichTrinh_dao.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+                lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
             String tenGaDi = null;
             try {
-                tenGaDi = ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
+                tenGaDi = gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa();
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
             String tenGaDen = null;
             try {
-                tenGaDen = ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
+                tenGaDen = gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa();
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -386,13 +386,13 @@ public class DoiVeController implements Initializable {
 
             String maGaDi = null;
             try {
-                maGaDi = ga_dao.getGaTheoTenGa(gaDi).getMaGa();
+                maGaDi = gaService.getGaTheoTenGa(gaDi).getMaGa();
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
             String maGaDen = null;
             try {
-                maGaDen = ga_dao.getGaTheoTenGa(gaDen).getMaGa();
+                maGaDen = gaService.getGaTheoTenGa(gaDen).getMaGa();
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -408,7 +408,7 @@ public class DoiVeController implements Initializable {
 
             List<LichTrinh> listLT = null;
             try {
-                listLT = lichTrinh_dao.traCuuDSLichTrinh(maGaDi, maGaDen, dp_ngayKhoiHanh.getValue());
+                listLT = lichTrinhService.traCuuDSLichTrinh(maGaDi, maGaDen, dp_ngayKhoiHanh.getValue());
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -444,14 +444,14 @@ public class DoiVeController implements Initializable {
             HoaDon hd = new HoaDon("temp", getData.nv, kh, LocalDateTime.now(), new KhuyenMai(null), false);
             Ve veMoi = null;
             try {
-                veMoi = new Ve(ve.getMaVe(), kh, ctlt, lv_dao.getLoaiVeTheoMa(lv.getMaLoaiVe()), tenHK, soCCCD, dob, "DaDoi", khuHoiMoi);
+                veMoi = new Ve(ve.getMaVe(), kh, ctlt, lvService.getLoaiVeTheoMa(lv.getMaLoaiVe()), tenHK, soCCCD, dob, "DaDoi", khuHoiMoi);
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
             try {
-                if (hd_dao.createTempInvoice(hd)) {
+                if (hdService.createTempInvoice(hd)) {
                     //get hóa đơn vừa tạo
-                    getData.hd = hd_dao.getHoaDonVuaTao();
+                    getData.hd = hdService.getHoaDonVuaTao();
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Lỗi");
@@ -465,7 +465,7 @@ public class DoiVeController implements Initializable {
             }
 
             try {
-                getData.kh = kh_dao.getKhachHangTheoMaKH(kh.getMaKH());
+                getData.kh = khService.getKhachHangTheoMaKH(kh.getMaKH());
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -489,13 +489,13 @@ public class DoiVeController implements Initializable {
                     if (result.isPresent() && result.get() == ButtonType.OK) {
                         HoaDon hoaDon = null;
                         try {
-                            hoaDon = hd_dao.getHoaDonVuaTao();
+                            hoaDon = hdService.getHoaDonVuaTao();
                         } catch (RemoteException ex) {
                             throw new RuntimeException(ex);
                         }
                         if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
                             try {
-                                hd_dao.delete(hoaDon);
+                                hdService.delete(hoaDon);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -509,13 +509,13 @@ public class DoiVeController implements Initializable {
                 btnBack.setOnMouseClicked(e1 -> {
                     HoaDon hoaDon = null;
                     try {
-                        hoaDon = hd_dao.getHoaDonVuaTao();
+                        hoaDon = hdService.getHoaDonVuaTao();
                     } catch (RemoteException ex) {
                         throw new RuntimeException(ex);
                     }
                     if (!hoaDon.isTrangThai()) {
                         try {
-                            hd_dao.delete(hoaDon);
+                            hdService.delete(hoaDon);
                         } catch (RemoteException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -546,20 +546,20 @@ public class DoiVeController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             LichTrinh lt = null;
             try {
-                lt = lichTrinh_dao.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+                lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             try {
-                return new SimpleStringProperty(  lt.getSoHieuTau() + " - " +ga_dao.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + ga_dao.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
+                return new SimpleStringProperty(  lt.getSoHieuTau() + " - " +gaService.getGaTheoMaGa(lt.getGaDi().getMaGa()).getTenGa() + " - " + gaService.getGaTheoMaGa(lt.getGaDen().getMaGa()).getTenGa() + "\n" + formatter.format(lt.getThoiGianKhoiHanh()) + " - " + formatter.format(lt.getThoiGianDuKienDen()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -567,18 +567,18 @@ public class DoiVeController implements Initializable {
         col_loaiCho.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             ChoNgoi cn = null;
             try {
-                cn = cn_dao.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
+                cn = cnService.getChoNgoiTheoMa(ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             try {
-                return new SimpleStringProperty(ltoa_dao.getLoaiToaTheoMa(toa_dao.getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                return new SimpleStringProperty(ltoaService.getLoaiToaTheoMa(toaService.getToaTheoID(cn.getToa().getMaToa()).getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -592,7 +592,7 @@ public class DoiVeController implements Initializable {
         col_tinhTrangVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -603,12 +603,12 @@ public class DoiVeController implements Initializable {
         col_loaiVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = ve_dao.getVeTheoID(p.getValue().getMaVe());
+                ve = veService.getVeTheoID(p.getValue().getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
             try {
-                return new SimpleStringProperty(lv_dao.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+                return new SimpleStringProperty(lvService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -712,7 +712,7 @@ public class DoiVeController implements Initializable {
     private void showToaTheoLT(LichTrinh lt) throws RemoteException {
         chosedId = null;
         grTrain.getChildren().clear();
-        List<Toa> dstoa = toa_dao.getAllToaTheoChuyenTau(String.valueOf(lt.getSoHieuTau()));
+        List<Toa> dstoa = toaService.getAllToaTheoChuyenTau(String.valueOf(lt.getSoHieuTau()));
         dstoa.sort(Comparator.comparing(Toa::getSttToa).reversed());
         GridPane gridPane = new GridPane();
         paneToa.setCenter(gridPane);
@@ -745,7 +745,7 @@ public class DoiVeController implements Initializable {
 
             imageView.setOnMouseClicked(e -> {
                 try {
-                    lblToa.setText("Toa " + toa.getSttToa() + ": " + ltoa_dao.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
+                    lblToa.setText("Toa " + toa.getSttToa() + ": " + ltoaService.getLoaiToaTheoMa(toa.getLoaiToa().getMaLoaiToa()).getTenLoaiToa());
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -759,7 +759,7 @@ public class DoiVeController implements Initializable {
                 gridPane.getChildren().clear();
                 List<ChoNgoi> dscn = null;
                 try {
-                    dscn = cn_dao.getDSChoNgoiTheoToa(toa.getMaToa());
+                    dscn = cnService.getDSChoNgoiTheoToa(toa.getMaToa());
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -797,13 +797,13 @@ public class DoiVeController implements Initializable {
                             // Kiểm tra trạng thái của ghế
                             ChoNgoi choNgoi = null;
                             try {
-                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                                choNgoi = cnService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
 
                             try {
-                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                if (!ctltService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
                                     seatButton.setStyle(styleGheDaDat);
                                 } else {
                                     seatButton.setStyle(styleGheThuong);
@@ -843,7 +843,7 @@ public class DoiVeController implements Initializable {
                                     }
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
                                     try {
-                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                        ctlt = ctltService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
                                     } catch (RemoteException ex) {
                                         throw new RuntimeException(ex);
                                     }
@@ -889,13 +889,13 @@ public class DoiVeController implements Initializable {
                             // Kiểm tra trạng thái của ghế
                             ChoNgoi choNgoi = null;
                             try {
-                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                                choNgoi = cnService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
 
                             try {
-                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                if (!ctltService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
                                     seatButton.setStyle(styleGheDaDat);
                                 } else {
                                     seatButton.setStyle(styleGheThuong);
@@ -939,7 +939,7 @@ public class DoiVeController implements Initializable {
                                     }
                                     seatButton.setStyle(styleGheDaChon + (finalCol > 7 ? styleGhe2 : styleGhe1));
                                     try {
-                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                        ctlt = ctltService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
                                     } catch (RemoteException ex) {
                                         throw new RuntimeException(ex);
                                     }
@@ -980,13 +980,13 @@ public class DoiVeController implements Initializable {
                             seatButton.setMinSize(30, 30);
                             ChoNgoi choNgoi = null;
                             try {
-                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                                choNgoi = cnService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
 
                             try {
-                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                if (!ctltService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
                                     seatButton.setStyle(styleGiuongDaDat);
                                 } else {
                                     seatButton.setStyle(styleGiuong);
@@ -1022,7 +1022,7 @@ public class DoiVeController implements Initializable {
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
                                     try {
-                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                        ctlt = ctltService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
                                     } catch (RemoteException ex) {
                                         throw new RuntimeException(ex);
                                     }
@@ -1066,13 +1066,13 @@ public class DoiVeController implements Initializable {
                             // Kiểm tra trạng thái của ghế
                             ChoNgoi choNgoi = null;
                             try {
-                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                                choNgoi = cnService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
 
                             try {
-                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                if (!ctltService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
                                     seatButton.setStyle(styleGiuongDaDat);
                                 } else {
                                     seatButton.setStyle(styleGiuong);
@@ -1108,7 +1108,7 @@ public class DoiVeController implements Initializable {
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
                                     try {
-                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                        ctlt = ctltService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
                                     } catch (RemoteException ex) {
                                         throw new RuntimeException(ex);
                                     }
@@ -1148,13 +1148,13 @@ public class DoiVeController implements Initializable {
                             // Kiểm tra trạng thái của ghế
                             ChoNgoi choNgoi = null;
                             try {
-                                choNgoi = cn_dao.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
+                                choNgoi = cnService.getChoNgoiTheoToa(toa.getMaToa(), seatNumber);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
 
                             try {
-                                if (!ctlt_dao.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
+                                if (!ctltService.getTrangThaiCN(lt.getMaLichTrinh(), choNgoi.getMaCho())) {
                                     seatButton.setStyle(styleGiuongDaDat);
                                 } else {
                                     seatButton.setStyle(styleGiuong);
@@ -1189,7 +1189,7 @@ public class DoiVeController implements Initializable {
                                     }
                                     seatButton.setStyle(styleGiuongDaChon);
                                     try {
-                                        ctlt = ctlt_dao.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
+                                        ctlt = ctltService.getCTLTTheoCN(lt.getMaLichTrinh(), seatButton.getId());
                                     } catch (RemoteException ex) {
                                         throw new RuntimeException(ex);
                                     }
@@ -1227,15 +1227,24 @@ public class DoiVeController implements Initializable {
         imageView.fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
     }
 
-    public void initDao() throws MalformedURLException, NotBoundException, RemoteException {
-        lichTrinh_dao = (LichTrinhService) Naming.lookup("rmi://localhost:9999/LichTrinh_DAO");
-        ve_dao = (VeService) Naming.lookup("rmi://localhost:9999/Ve_DAO");
-        ga_dao = (GaService) Naming.lookup("rmi://localhost:9999/Ga_DAO");
-        ctlt_dao = (CT_LichTrinhService) Naming.lookup("rmi://localhost:9999/CT_LichTrinh_DAO");
-        cthd_dao = (CT_HoaDonService) Naming.lookup("rmi://localhost:9999/CT_HoaDon_DAO");
-        hd_dao = (HoaDonService) Naming.lookup("rmi://localhost:9999/HoaDon_DAO");
-        toa_dao = (ToaService) Naming.lookup("rmi://localhost:9999/Toa_DAO");
-        ltoa_dao = (LoaiToaService) Naming.lookup("rmi://localhost:9999/LoaiToa_DAO");
-        cn_dao = (ChoNgoiService) Naming.lookup("rmi://localhost:9999/ChoNgoi_DAO");
+    private void initService() {
+        try {
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+            lvService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+            khService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
+            cnService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
+            ltoaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaiToaService");
+
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
+
     }
 }
