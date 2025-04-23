@@ -367,17 +367,17 @@ public class HDDoiTraVeController implements Initializable {
 
     private void initService() {
         try {
-            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/VeService");
-            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-            khuyenMaiService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/KhuyenMaiService");
-            ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
-            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
-            choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
-            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
-            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
-            loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaiToaService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/veService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+            khuyenMaiService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
+            ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+            choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/choNgoiService");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
+            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/loaiVeService");
+            loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaiToaService");
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);

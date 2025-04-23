@@ -639,13 +639,13 @@ public class HuyVeController implements Initializable {
 
     private void initService() {
             try {
-                veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-                ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
-                lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-                loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
-                hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-                khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
-                gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+                veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+                ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+                lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+                loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/loaiVeService");
+                hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+                khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+                gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
             } catch (NotBoundException | MalformedURLException | RemoteException e) {
                 e.printStackTrace();
                 throw new RuntimeException("Failed to initialize services", e);

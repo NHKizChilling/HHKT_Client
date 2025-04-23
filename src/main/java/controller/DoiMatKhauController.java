@@ -189,7 +189,7 @@ public class DoiMatKhauController implements Initializable {
 
     public void initService() throws MalformedURLException, NotBoundException, RemoteException {
         try {
-            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/TaiKhoanService");
+            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/taiKhoanService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);

@@ -96,7 +96,6 @@ public class ThongKeController implements Initializable {
     private HoaDonService hoaDonService;
     private CT_HoaDonService ctHoaDonService;
     private VeService veService;
-    private CT_LichTrinhService ctLichTrinhService;
 
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -245,10 +244,9 @@ public class ThongKeController implements Initializable {
     }
 
     private void initServices() throws MalformedURLException, NotBoundException, RemoteException {
-        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-        ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
-        veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+        ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+        veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
     }
 
     private void initComboBox(LocalDate date) {

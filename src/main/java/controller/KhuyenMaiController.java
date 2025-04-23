@@ -12,12 +12,14 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -93,62 +95,12 @@ public class KhuyenMaiController implements Initializable, Serializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        khuyenMaiService = new KhuyenMaiService() {
-            @Override
-            public List<KhuyenMai> getAllKM() throws RemoteException {
-                return List.of();
-            }
+        try {
+            khuyenMaiService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            throw new RuntimeException(e);
+        }
 
-            @Override
-            public List<KhuyenMai> getKMHienCo() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public KhuyenMai getKMTheoMa(String s) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public KhuyenMai getKMGiamCaoNhat() throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public List<KhuyenMai> getKMTheoNgay(LocalDate localDate) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public boolean themKhuyenMai(KhuyenMai khuyenMai) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean suaKhuyenMai(KhuyenMai khuyenMai) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean xoaKhuyenMai(String s) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean kichHoatKhuyenMai() throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean khoaKhuyenMai() throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean capNhatTrangThaiKM(String s, boolean b) throws RemoteException {
-                return false;
-            }
-        };
         ArrayList<KhuyenMai> list = null;
         try {
             list = (ArrayList<KhuyenMai>) khuyenMaiService.getAllKM();

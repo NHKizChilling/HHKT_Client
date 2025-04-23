@@ -10,12 +10,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class NhanVienController implements Initializable {
@@ -95,60 +97,15 @@ public class NhanVienController implements Initializable {
     @FXML
     private Button btn_reset;
 
-    private final NhanVienService nhanVienService = new NhanVienService() {
-        @Override
-        public List<NhanVien> getAll() throws RemoteException {
-            return List.of();
-        }
-
-        @Override
-        public NhanVien getNhanVien(String s) throws RemoteException {
-            return null;
-        }
-
-        @Override
-        public boolean create(NhanVien nhanVien) throws RemoteException {
-            return false;
-        }
-
-        @Override
-        public boolean updateInfo(NhanVien nhanVien) throws RemoteException {
-            return false;
-        }
-
-        @Override
-        public boolean delete(String s) throws RemoteException {
-            return false;
-        }
-
-        @Override
-        public boolean updateTinhTrangCV(String s, String s1) throws RemoteException {
-            return false;
-        }
-
-        @Override
-        public List<NhanVien> getDSQuanLy() throws RemoteException {
-            return List.of();
-        }
-
-        @Override
-        public List<NhanVien> getDSNhanVien() throws RemoteException {
-            return List.of();
-        }
-
-        @Override
-        public NhanVien getNhanVienTheoTen(String s) throws RemoteException {
-            return null;
-        }
-
-        @Override
-        public NhanVien getNhanVienTheoSDT(String s) throws RemoteException {
-            return null;
-        }
-    };
+    private NhanVienService nhanVienService;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        try {
+            nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/nhanVienService");
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            throw new RuntimeException(e);
+        }
         ArrayList<NhanVien> list = null;
         try {
             list = (ArrayList<NhanVien>) nhanVienService.getAll();

@@ -348,10 +348,10 @@ public class KetCaController implements Initializable {
 
     private void initService() {
         try {
-            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/VeService");
-            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
-            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/CaLamViecService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/veService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/caLamViecService");
             printPDF = new PrintPDF();
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();

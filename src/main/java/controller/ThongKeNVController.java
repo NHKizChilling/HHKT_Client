@@ -63,10 +63,8 @@ public class ThongKeNVController implements Initializable {
 
     private NhanVienService nhanVienService;
     private HoaDonService hoaDonService;
-    private CT_HoaDonService ct_hoaDonService;
     private VeService veService;
     private LichTrinhService lichTrinhService;
-    private CT_LichTrinhService ct_lichTrinhService;
     private GaService gaService;
 
     @Override
@@ -161,10 +159,8 @@ public class ThongKeNVController implements Initializable {
     private void initDAO() throws MalformedURLException, NotBoundException, RemoteException {
         nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/NhanVienService");
         hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-        ct_hoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
         veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
         lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-        ct_lichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
         gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
     }
 

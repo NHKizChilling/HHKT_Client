@@ -406,14 +406,14 @@ public class HDHuyVeController implements Initializable {
 
     private void initServices() {
         try {
-            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
-            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
-            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
-            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
-            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
-            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
+            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+            hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+            ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+            loaiVeService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/loaiVeService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+            khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);

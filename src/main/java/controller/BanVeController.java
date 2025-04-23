@@ -188,15 +188,15 @@ public class BanVeController implements Initializable {
     private ArrayList<ChiTietLichTrinh> dsctltkh = new ArrayList<>();
 
     private void initDAO() throws RemoteException, MalformedURLException, NotBoundException {
-        khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
-        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
-        CT_HoaDonService ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
-        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
-        toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
-        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
-        loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaiToaService");
-        choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
+        khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+        hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:7701/hoaDonService");
+        CT_HoaDonService ctHoaDonService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/ctHoaDonService");
+        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+        ctLichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");
+        toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
+        gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+        loaiToaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/loaiToaService");
+        choNgoiService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/choNgoiService");
     }
 
     @Override

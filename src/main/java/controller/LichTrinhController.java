@@ -17,14 +17,12 @@ import java.net.URL;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class LichTrinhController implements Initializable {
@@ -117,17 +115,22 @@ public class LichTrinhController implements Initializable {
 
     private ArrayList<LichTrinh> list;
 
-    private void initDAO() throws RemoteException, MalformedURLException, NotBoundException {
-        chuyenTauService = (ChuyenTauService) Naming.lookup("rmi://localhost:7701/ChuyenTauService");
-        ct_lichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
-        lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-        gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+    private void initService() {
+        try {
+            chuyenTauService = (ChuyenTauService) Naming.lookup("rmi://localhost:7701/chuyenTauService");
+            ct_lichTrinhService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/ctLichTrinhService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
+        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize services", e);
+        }
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
-        initDao();
+        initService();
 
         list = new ArrayList<>();
         ArrayList<Ga> listGa = null;
@@ -362,189 +365,6 @@ public class LichTrinhController implements Initializable {
                 }
             }
         });
-    }
-
-    protected void initDao() {
-        // TODO Auto-generated method stub
-        lichTrinhService = new LichTrinhService() {
-            @Override
-            public List<LichTrinh> getAll() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public LichTrinh getLichTrinhTheoID(String s) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public List<LichTrinh> getDSLichTrinhTheoTrangThai(boolean b) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public List<LichTrinh> traCuuDSLichTrinh(String s, String s1) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public List<LichTrinh> traCuuDSLichTrinh(String s, String s1, LocalDate localDate) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public List<LichTrinh> traCuuDSLichTrinhSauNgayHienTai() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public List<LichTrinh> traCuuDSLichTrinhTheoNgay(LocalDate localDate) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public Long getSoLuongChoConTrong(String s) throws RemoteException {
-                return 0L;
-            }
-
-            @Override
-            public boolean updateTrangThaiChuyenTau(String s, boolean b) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean updateTrangThaiCT(boolean b) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean update(LichTrinh lichTrinh) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean updateInfo(LichTrinh lichTrinh) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean create(LichTrinh lichTrinh) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public LichTrinh getOne(String s) throws RemoteException {
-                return null;
-            }
-        };
-        ct_lichTrinhService = new CT_LichTrinhService() {
-            @Override
-            public List<ChiTietLichTrinh> getAllChiTietLichTrinh() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public boolean create(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean update(ChiTietLichTrinh chiTietLichTrinh) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean updateCTLT(ChiTietLichTrinh chiTietLichTrinh, boolean b) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean delete(String s, String s1) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public List<ChiTietLichTrinh> getCtltTheoTrangThai(boolean b) throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public ChiTietLichTrinh getCTLTTheoCN(String s, String s1) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public boolean getTrangThaiCN(String s, String s1) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public void addChiTietLichTrinh(String s) throws RemoteException {
-
-            }
-
-            @Override
-            public List<ChiTietLichTrinh> getCtltTheoMaLichTrinh(String s) throws RemoteException {
-                return List.of();
-            }
-        };
-        gaService = new GaService() {
-            @Override
-            public List<Ga> getAllGa() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public Ga getGaTheoMaGa(String s) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public Ga getGaTheoTenGa(String s) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public double KhoangCach(String s) throws RemoteException {
-                return 0;
-            }
-
-            @Override
-            public boolean create(Ga ga) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean update(Ga ga) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean delete(String s) throws RemoteException {
-                return false;
-            }
-        };
-        chuyenTauService = new ChuyenTauService() {
-            @Override
-            public List<ChuyenTau> getAll() throws RemoteException {
-                return List.of();
-            }
-
-            @Override
-            public ChuyenTau getChuyenTauTheoID(String s) throws RemoteException {
-                return null;
-            }
-
-            @Override
-            public boolean create(ChuyenTau chuyenTau) throws RemoteException {
-                return false;
-            }
-
-            @Override
-            public boolean update(ChuyenTau chuyenTau) throws RemoteException {
-                return false;
-            }
-        };
     }
 
     protected void timKiem() throws RemoteException {

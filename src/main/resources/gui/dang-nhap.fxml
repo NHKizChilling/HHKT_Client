@@ -47,7 +47,7 @@
    <center>
       <AnchorPane prefHeight="346.0" prefWidth="368.0" style="-fx-background-color: #fff;" BorderPane.alignment="CENTER">
          <children>
-            <TextField fx:id="txtTK" layoutX="90.0" layoutY="108.0" prefHeight="30.0" prefWidth="231.0" promptText="Mã nhân viên" style="-fx-border-width: 0 0 1 0; -fx-background-color: transparent; -fx-border-color: blue;" text="NV270804001">
+            <TextField fx:id="txtTK" layoutX="90.0" layoutY="108.0" prefHeight="30.0" prefWidth="231.0" promptText="Mã nhân viên" style="-fx-border-width: 0 0 1 0; -fx-background-color: transparent; -fx-border-color: blue;" text="NV270804002">
                <font>
                   <Font name="Times New Roman" size="15.0" />
                </font>

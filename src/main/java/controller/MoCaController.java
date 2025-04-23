@@ -53,6 +53,7 @@ public class MoCaController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initService();
         NhanVien nv1 = getData.nv;
 
         if (nv1 != null) {
@@ -187,7 +188,8 @@ public class MoCaController implements Initializable {
         try {
             caLamViec = caLamViecService.getCaLamViecMoiNhatCuaNhanVien(nv.getMaNV());
         } catch (RemoteException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            caLamViec = null;
         }
         if (caLamViec != null && caLamViec.getGioKetCa() == null) {
             //nếu giờ hiện tại trừ đi giờ bắt đầu ca lớn hơn 8 tiếng thì không cho mở ca mới
@@ -220,8 +222,8 @@ public class MoCaController implements Initializable {
 
     private void initService() {
         try {
-            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/CaLamViecService");
-            nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/caLamViecService");
+            nhanVienService = (NhanVienService) Naming.lookup("rmi://localhost:7701/nhanVienService");
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);

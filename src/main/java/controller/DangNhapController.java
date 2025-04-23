@@ -273,10 +273,10 @@ public class DangNhapController {
 
     public void initService() throws MalformedURLException, NotBoundException, RemoteException {
         try {
-            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
-            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/TaiKhoanService");
-            nvService = (NhanVienService) Naming.lookup("rmi://localhost:7701/NhanVienService");
-            kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/KhuyenMaiService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
+            tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/taiKhoanService");
+            nvService = (NhanVienService) Naming.lookup("rmi://localhost:7701/nhanVienService");
+            kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);
