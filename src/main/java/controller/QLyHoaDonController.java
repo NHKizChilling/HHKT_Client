@@ -662,17 +662,17 @@ public class QLyHoaDonController implements Initializable {
     }
     public void initService() throws MalformedURLException, NotBoundException, RemoteException {
         try {
-            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/lichTrinhService");
-            veService = (VeService) Naming.lookup("rmi://localhost:7701/veService");
-            gaService = (GaService) Naming.lookup("rmi://localhost:7701/gaService");
-            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_lichTrinhService");
-            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDon_DAO");
-            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDon_DAO");
-            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/toaService");
+            lichTrinhService = (LichTrinhService) Naming.lookup("rmi://localhost:7701/LichTrinhService");
+            veService = (VeService) Naming.lookup("rmi://localhost:7701/VeService");
+            gaService = (GaService) Naming.lookup("rmi://localhost:7701/GaService");
+            ctltService = (CT_LichTrinhService) Naming.lookup("rmi://localhost:7701/CT_LichTrinhService");
+            cthdService = (CT_HoaDonService) Naming.lookup("rmi://localhost:7701/CT_HoaDonService");
+            hdService = (HoaDonService) Naming.lookup("rmi://localhost:7701/HoaDonService");
+            toaService = (ToaService) Naming.lookup("rmi://localhost:7701/ToaService");
             ltoaService = (LoaiToaService) Naming.lookup("rmi://localhost:7701/LoaitoaService");
-            cnService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoi_DAO");
-            lvService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVe_DAO");
-            khService = (KhachHangService) Naming.lookup("rmi://localhost:7701/khachHangService");
+            cnService = (ChoNgoiService) Naming.lookup("rmi://localhost:7701/ChoNgoiService");
+            lvService = (LoaiVeService) Naming.lookup("rmi://localhost:7701/LoaiVeService");
+            khService = (KhachHangService) Naming.lookup("rmi://localhost:7701/KhachHangService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);
