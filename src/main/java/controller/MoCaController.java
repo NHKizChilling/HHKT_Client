@@ -22,6 +22,7 @@ import java.net.URL;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
@@ -126,16 +127,20 @@ public class MoCaController implements Initializable {
                 return;
             }
 
-            getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
-
-            getData.caLamViec.setTienKetCa(tienDauCa);
-            getData.caLamViec.setGioKetCa(null);
-
+            CaLamViec tmp = null;
             try {
-                caLamViecService.create(getData.caLamViec);
+                tmp = caLamViecService.getCaLamViecMoiNhatCuaNhanVien(nv1.getMaNV());
+                if (tmp.getGioKetCa() == null) {
+                    getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
+
+                    caLamViecService.create(getData.caLamViec);
+                } else {
+                    getData.caLamViec = tmp;
+                }
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
+
 
             if (getData.nv == null) {
                 try {
@@ -206,18 +211,16 @@ public class MoCaController implements Initializable {
 //                txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
 //                txt_ghiChu.setText(caLamViec.getGhiChu());
 //            }
+            DecimalFormat currencyFormat = new DecimalFormat("#,###");
             cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
             lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(caLamViec.getGioMoCa()));
-            txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
+            txt_tienDauCa.setText(currencyFormat.format(caLamViec.getTienDauCa()));
             txt_ghiChu.setText(caLamViec.getGhiChu());
         } else {
             cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
             lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(gioBatDau));
             txt_tienDauCa.requestFocus();
         }
-
-
-
     }
 
     private void initService() {
