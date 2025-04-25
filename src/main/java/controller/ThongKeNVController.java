@@ -360,7 +360,7 @@ public class ThongKeNVController implements Initializable {
         }
 
         try {
-            FileOutputStream fileOut = new FileOutputStream("ThongKeNhanVien.xlsx");
+            FileOutputStream fileOut = new FileOutputStream("src/main/resources/excel/ThongKeNhanVien.xlsx");
             workbook.write(fileOut);
             fileOut.close();
             workbook.close();
@@ -369,7 +369,7 @@ public class ThongKeNVController implements Initializable {
         }
 
         try {
-            File file = new File("ThongKeNhanVien.xlsx");
+            File file = new File("src/main/resources/excel/ThongKeNhanVien.xlsx");
             if (file.exists()) {
                 Desktop.getDesktop().open(file);
             }
@@ -478,7 +478,7 @@ public class ThongKeNVController implements Initializable {
         }
 
         try {
-            FileOutputStream fileOut = new FileOutputStream("ThongKeChuyenTau.xlsx");
+            FileOutputStream fileOut = new FileOutputStream("src/main/resources/excel/ThongKeChuyenTau.xlsx");
             workbook.write(fileOut);
             fileOut.close();
             workbook.close();
@@ -487,7 +487,7 @@ public class ThongKeNVController implements Initializable {
         }
 
         try {
-            File file = new File("ThongKeChuyenTau.xlsx");
+            File file = new File("src/main/resources/excel/ThongKeChuyenTau.xlsx");
             if (file.exists()) {
                 Desktop.getDesktop().open(file);
             }

@@ -7,6 +7,7 @@ package controller;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcons;
+import entity.CaLamViec;
 import entity.NhanVien;
 import entity.TaiKhoan;
 import gui.TrangChu_GUI;
@@ -61,6 +62,7 @@ public class DangNhapController {
     private TaiKhoanService tkService;
     private NhanVienService nvService;
     private KhuyenMaiService kmService;
+    private CaLamViecService caLamViecService;
 
 
     public void onLoginButtonClick() throws SQLException, IOException, NotBoundException {
@@ -104,6 +106,8 @@ public class DangNhapController {
                         kmService.kichHoatKhuyenMai();
                         kmService.khoaKhuyenMai();
 
+                        CaLamViec tmp = caLamViecService.getCaLamViecMoiNhatCuaNhanVien(manv);
+
                         FXMLLoader fxmlLoader = new FXMLLoader(TrangChu_GUI.class.getResource("mo-ca.fxml"));
                         FXMLLoader fxmlLoader1 = new FXMLLoader(TrangChu_GUI.class.getResource("loader.fxml"));
                         FXMLLoader fxmlLoader2 = new FXMLLoader(TrangChu_GUI.class.getResource("trang-chu.fxml"));
@@ -144,10 +148,18 @@ public class DangNhapController {
                                     TrangChu_GUI.stage.show();
                                     TrangChu_GUI.stage.centerOnScreen();
                                 } else {
-                                    stg.close();
-                                    TrangChu_GUI.stage.setScene(scene);
-                                    TrangChu_GUI.stage.show();
-                                    TrangChu_GUI.stage.centerOnScreen();
+                                    if (tmp == null || tmp.getGioKetCa() != null) {
+                                        stg.close();
+                                        TrangChu_GUI.stage.setScene(scene);
+                                        TrangChu_GUI.stage.show();
+                                        TrangChu_GUI.stage.centerOnScreen();
+                                    } else {
+                                        getData.caLamViec = tmp;
+                                        stg.close();
+                                        TrangChu_GUI.stage.setScene(scene2);
+                                        TrangChu_GUI.stage.show();
+                                        TrangChu_GUI.stage.centerOnScreen();
+                                    }
                                 }
                             });
                         } catch (IOException e) {
@@ -277,6 +289,7 @@ public class DangNhapController {
             tkService = (TaiKhoanService) Naming.lookup("rmi://localhost:7701/taiKhoanService");
             nvService = (NhanVienService) Naming.lookup("rmi://localhost:7701/nhanVienService");
             kmService = (KhuyenMaiService) Naming.lookup("rmi://localhost:7701/khuyenMaiService");
+            caLamViecService = (CaLamViecService) Naming.lookup("rmi://localhost:7701/caLamViecService");
         }catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize services", e);

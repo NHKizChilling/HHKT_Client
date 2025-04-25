@@ -359,8 +359,7 @@ public class HoaDonController implements Initializable {
                 PrintPDF printPDF = new PrintPDF();
                 try {
                     printPDF.inHoaDon(getData.hd);
-                    ArrayList<Ve> list = getData.dsve;
-                    printPDF.inVe(list);
+                    printPDF.inVe(dsve);
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Thông báo");
                     alert.setHeaderText("In hóa đơn thành công");
@@ -647,8 +646,7 @@ public class HoaDonController implements Initializable {
             PrintPDF printPDF = new PrintPDF();
             try {
                 printPDF.inHoaDon(getData.hd);
-                ArrayList<Ve> list = getData.dsve;
-                printPDF.inVe(list);
+                printPDF.inVe(dsve);
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Thông báo");
                 alert.setHeaderText("In hóa đơn thành công");

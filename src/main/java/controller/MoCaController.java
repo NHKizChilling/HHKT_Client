@@ -127,16 +127,10 @@ public class MoCaController implements Initializable {
                 return;
             }
 
-            CaLamViec tmp = null;
-            try {
-                tmp = caLamViecService.getCaLamViecMoiNhatCuaNhanVien(nv1.getMaNV());
-                if (tmp.getGioKetCa() == null) {
-                    getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
+            getData.caLamViec = new CaLamViec(nv1, LocalDateTime.now(), tienDauCa, txt_ghiChu.getText(), true);
 
-                    caLamViecService.create(getData.caLamViec);
-                } else {
-                    getData.caLamViec = tmp;
-                }
+            try {
+                caLamViecService.create(getData.caLamViec);
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
