@@ -8,9 +8,8 @@ package controller;
 import com.jfoenix.controls.JFXButton;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcons;
-import entity.ChiTietHoaDon;
-import entity.HoaDon;
-import entity.Ve;
+import dto.VeDTO;
+import entity.*;
 import gui.TrangChu_GUI;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -31,6 +30,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.SneakyThrows;
 import service.*;
+import util.VeMapper;
 
 import java.awt.*;
 import java.io.File;
@@ -405,7 +405,8 @@ public class TrangChuController implements Initializable {
                     if (cthd != null) {
                         Ve ve = cthd.getVe();
                         veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
-                        ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
+                        VeDTO ve_dto = veService.getVeTheoID(ve.getMaVe());
+                        ctltService.updateCTLT(new ChiTietLichTrinh(new ChoNgoi(ve_dto.getMaCho()), new LichTrinh(ve_dto.getMaLichTrinh())), true);
                     }
                 }
             }
@@ -434,7 +435,8 @@ public class TrangChuController implements Initializable {
                     if (cthd != null) {
                         Ve ve = cthd.getVe();
                         veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
-                        ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
+                        VeDTO ve_dto = veService.getVeTheoID(ve.getMaVe());
+                        ctltService.updateCTLT(new ChiTietLichTrinh(new ChoNgoi(ve_dto.getMaCho()), new LichTrinh(ve_dto.getMaLichTrinh())), true);
                     }
                 }
             }
@@ -461,7 +463,7 @@ public class TrangChuController implements Initializable {
                 List<ChiTietHoaDon> dsCTHD = cthdService.getCT_HoaDon(hd.getMaHD());
                 for (ChiTietHoaDon cthd : dsCTHD) {
                     if (cthd != null) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         veService.updateTinhTrangVe(ve.getMaVe(), "DaHuy");
                         ctltService.updateCTLT(ve.getChiTietLichTrinh(), true);
                     }

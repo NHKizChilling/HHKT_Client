@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -214,7 +215,7 @@ public class KhachHangController implements Initializable {
             btn_update.setDisable(false);
             ArrayList<Ve> dsVeTheoMaHK = null;
             try {
-                dsVeTheoMaHK = (ArrayList<Ve>) veService.getDSVeTheoMaKH(hk.getMaKH());
+                dsVeTheoMaHK = (ArrayList<Ve>) VeMapper.toEntityList(veService.getDSVeTheoMaKH(hk.getMaKH()));
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -361,7 +362,7 @@ public class KhachHangController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -381,7 +382,7 @@ public class KhachHangController implements Initializable {
         col_loaiCho.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -408,7 +409,7 @@ public class KhachHangController implements Initializable {
         col_loaiVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }

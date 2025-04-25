@@ -2,6 +2,7 @@ package controller;
 
 import com.itextpdf.text.DocumentException;
 import com.jfoenix.controls.JFXButton;
+import dto.VeDTO;
 import entity.*;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -11,6 +12,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import service.*;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -141,6 +143,8 @@ public class HDDoiTraVeController implements Initializable {
         }
         Ve ve_doi = getData.dsve.getFirst();
         ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve_doi);
+        cthd.tinhGiaVe();
+        cthd.tinhGiaGiam();
 
         txtTienTra.setOnKeyReleased(event -> {
             goiYGia();
@@ -309,9 +313,10 @@ public class HDDoiTraVeController implements Initializable {
                 getData.hd = hd;
                 try {
                     if(hoaDonService.update(hd)) {
-                        ctLichTrinhService.updateCTLT(veService.getVeTheoID(ve_doi.getMaVe()).getChiTietLichTrinh(), true);
+                        VeDTO ve_dto = veService.getVeTheoID(ve_doi.getMaVe());
+                        ctLichTrinhService.updateCTLT(new ChiTietLichTrinh(new ChoNgoi(ve_dto.getMaCho()), new LichTrinh(ve_dto.getMaLichTrinh())), true);
                         ctLichTrinhService.updateCTLT(ve_doi.getChiTietLichTrinh(), false);
-                        veService.update(ve_doi);
+                        veService.update(VeMapper.toDTO(ve_doi));
                         getData.dsve.clear();
                         getData.dsve.add(ve_doi);
                         ctHoaDonService.create(cthd);

@@ -211,7 +211,7 @@ public class MoCaController implements Initializable {
 //                txt_tienDauCa.setText(String.valueOf(caLamViec.getTienDauCa()));
 //                txt_ghiChu.setText(caLamViec.getGhiChu());
 //            }
-            DecimalFormat currencyFormat = new DecimalFormat("#,###");
+            DecimalFormat currencyFormat = new DecimalFormat("####");
             cbNhanVien.setValue(nv.getTenNV() + " - " + nv.getMaNV());
             lbl_gioBatDau.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(caLamViec.getGioMoCa()));
             txt_tienDauCa.setText(currencyFormat.format(caLamViec.getTienDauCa()));

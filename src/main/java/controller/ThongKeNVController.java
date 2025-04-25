@@ -13,6 +13,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import service.*;
+import util.VeMapper;
 
 import java.awt.*;
 import java.io.File;
@@ -220,8 +221,8 @@ public class ThongKeNVController implements Initializable {
         lbl_soChuyenTau.setText(soChuyenTau + " chuyến tàu");
 
 
-        ArrayList<Ve> dsVe = new ArrayList<>(veService.getVeTheoTinhTrang("DaBan"));
-        dsVe.addAll(veService.getVeTheoTinhTrang("DaDoi"));
+        List<Ve> dsVe = VeMapper.toEntityList(veService.getVeTheoTinhTrang("DaBan"));
+        dsVe.addAll(VeMapper.toEntityList(veService.getVeTheoTinhTrang("DaDoi")));
 
         HashMap<String, Integer> mapChuyenTau = new HashMap<>();
 
@@ -436,8 +437,8 @@ public class ThongKeNVController implements Initializable {
             cell.setCellStyle(headerStyle);
         }
         List<LichTrinh> listLichTrinh = lichTrinhService.getDSLichTrinhTheoTrangThai(true);
-        ArrayList<Ve> dsVe = new ArrayList<>(veService.getVeTheoTinhTrang("DaBan"));
-        dsVe.addAll(veService.getVeTheoTinhTrang("DaDoi"));
+        List<Ve> dsVe = VeMapper.toEntityList(veService.getVeTheoTinhTrang("DaBan"));
+        dsVe.addAll(VeMapper.toEntityList(veService.getVeTheoTinhTrang("DaDoi")));
         HashMap<String, Integer> mapChuyenTau = new HashMap<>();
 
         for (Ve ve : dsVe) {

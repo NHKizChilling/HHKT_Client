@@ -16,6 +16,7 @@ import service.CT_HoaDonService;
 import service.CaLamViecService;
 import service.HoaDonService;
 import service.VeService;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -232,6 +233,7 @@ public class KetCaController implements Initializable {
                             throw new RuntimeException(e);
                         }
                     })
+                    .map(VeMapper::toEntity)
                     .collect(Collectors.toCollection(ArrayList::new));
 
             // Đếm số vé theo tình trạng
@@ -249,7 +251,7 @@ public class KetCaController implements Initializable {
                     soVeDoiUI += dsVe.size();
                 } else if (soVeBan > 0 && soVeHuy > 0 && soVeDoi > 0) { // Trường hợp Hóa đơn bán vé có vé "DaBan" và "DaHuy" và "DaDoi"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         soVeBanUI++;
                         if (ve.getTinhTrangVe().equals("DaDoi") || ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -259,7 +261,7 @@ public class KetCaController implements Initializable {
                     tienBanVe += tienHoaDon;
                 } else if (soVeBan > 0 && (soVeHuy > 0 || soVeDoi > 0)) { // Trường hợp Hóa đơn bán vé có vé "DaHuy" hoặc "DaDoi"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         soVeBanUI++;
                         if (ve.getTinhTrangVe().equals("DaHuy") || ve.getTinhTrangVe().equals("DaDoi")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -269,7 +271,7 @@ public class KetCaController implements Initializable {
                     tienBanVe += tienHoaDon;
                 } else if (soVeBan == 0 && soVeDoi > 0 && soVeHuy > 0) { // Trường hợp hóa đơn đổi vé có vé "DaHuy"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         soVeDoiUI++;
                         if (ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
@@ -287,7 +289,7 @@ public class KetCaController implements Initializable {
                     soVeHuyUI += dsVe.size();
                 } else { // Trường hợp hóa đơn đổi vé có vé "DaHuy"
                     for (ChiTietHoaDon cthd : dsCTHD) {
-                        Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                         if (ve.getTinhTrangVe().equals("DaHuy")) {
                             tienHoaDon -= cthd.getGiaVe() - cthd.getGiaGiam();
                             soVeHuy--;

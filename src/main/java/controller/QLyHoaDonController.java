@@ -23,6 +23,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
 import service.*;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -196,7 +197,7 @@ public class QLyHoaDonController implements Initializable {
             Ve ve = param.getValue().getVe();
             LichTrinh lt = null;
             try {
-                lt = lichTrinhService.getLichTrinhTheoID(veService.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
+                lt = lichTrinhService.getLichTrinhTheoID(veService.getVeTheoID(ve.getMaVe()).getMaLichTrinh());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -212,7 +213,7 @@ public class QLyHoaDonController implements Initializable {
             Ve ve = param.getValue().getVe();
             ChoNgoi cn = null;
             try {
-                cn = cnService.getChoNgoiTheoMa(veService.getVeTheoID(ve.getMaVe()).getChiTietLichTrinh().getChoNgoi().getMaCho());
+                cn = cnService.getChoNgoiTheoMa(veService.getVeTheoID(ve.getMaVe()).getMaCho());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -226,7 +227,7 @@ public class QLyHoaDonController implements Initializable {
         colLoaiVe.setCellValueFactory(param -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(param.getValue().getVe().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(param.getValue().getVe().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -241,7 +242,7 @@ public class QLyHoaDonController implements Initializable {
         colGiaVe.setCellValueFactory(param -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(param.getValue().getVe().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(param.getValue().getVe().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -266,7 +267,7 @@ public class QLyHoaDonController implements Initializable {
                 throw new RuntimeException(e);
             }
             try {
-                cbLoaiVe.setValue(lvService.getLoaiVeTheoMa(veService.getVeTheoID(cthd.getVe().getMaVe()).getLoaiVe().getMaLoaiVe()).getTenLoaiVe());
+                cbLoaiVe.setValue(lvService.getLoaiVeTheoMa(veService.getVeTheoID(cthd.getVe().getMaVe()).getMaLoaiVe()).getTenLoaiVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -398,7 +399,7 @@ public class QLyHoaDonController implements Initializable {
                 for (ChiTietHoaDon cthd : dscthd) {
                     Ve ve = null;
                     try {
-                        ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                        ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -445,7 +446,7 @@ public class QLyHoaDonController implements Initializable {
                 for (ChiTietHoaDon cthd1 : listCTHD) {
                     Ve ve = null;
                     try {
-                        ve = veService.getVeTheoID(cthd1.getVe().getMaVe());
+                        ve = VeMapper.toEntity(veService.getVeTheoID(cthd1.getVe().getMaVe()));
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -454,7 +455,7 @@ public class QLyHoaDonController implements Initializable {
             } else {
                 Ve ve = null;
                 try {
-                    ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                    ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
@@ -500,7 +501,7 @@ public class QLyHoaDonController implements Initializable {
             for (ChiTietHoaDon cthd : dscthd) {
                 Ve ve = null;
                 try {
-                    ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                    ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }

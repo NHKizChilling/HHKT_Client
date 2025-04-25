@@ -18,6 +18,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import lombok.SneakyThrows;
 import service.*;
+import util.VeMapper;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -82,7 +83,7 @@ public class GioiThieuController implements Initializable {
             }
             List<ChiTietHoaDon> dscthd = cthdService.getCT_HoaDon(hd.getMaHD());
             for (ChiTietHoaDon ct : dscthd) {
-                Ve ve = veService.getVeTheoID(ct.getVe().getMaVe());
+                Ve ve = VeMapper.toEntity(veService.getVeTheoID(ct.getVe().getMaVe()));
                 if (ve.getTinhTrangVe().equals("DaBan")) {
                     slVe++;
                 }

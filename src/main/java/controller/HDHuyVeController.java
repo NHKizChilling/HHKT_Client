@@ -12,6 +12,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import service.*;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -159,7 +160,6 @@ public class HDHuyVeController implements Initializable {
                 hoaDon.setTrangThai(true);
                 hoaDon.setTongTien(0 - tongTienTra);
                 hoaDon.setTongGiamGia(tongLePhi); // tổng giảm giá = tổng lệ phí
-                hoaDon.setKhuyenMai(new KhuyenMai(null));
 
                 try {
                     if (hoaDonService.update(hoaDon)) {
@@ -173,7 +173,7 @@ public class HDHuyVeController implements Initializable {
                                 ctHoaDon.setGiaGiam(mapLePhi.get(ve.getMaVe())); // giảm giá = lệ phí
                                 if (ctHoaDonService.create(ctHoaDon)) {
                                     ve.setTinhTrangVe("DaHuy");
-                                    veService.update(ve);
+                                    veService.update(VeMapper.toDTO(ve));
                                 } else {
                                     // thông báo
                                     Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -251,7 +251,7 @@ public class HDHuyVeController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
                 LoaiVe lv = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
                 LichTrinh lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -268,7 +268,7 @@ public class HDHuyVeController implements Initializable {
             Ve ve = null;
             ChiTietHoaDon ctHoaDon = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
                 ctHoaDon = ctHoaDonService.getCT_HoaDonTheoMaVe(ve.getMaVe());
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
@@ -279,7 +279,7 @@ public class HDHuyVeController implements Initializable {
         col_lePhi.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -289,7 +289,7 @@ public class HDHuyVeController implements Initializable {
         col_tienTra.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }

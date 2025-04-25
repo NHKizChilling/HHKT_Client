@@ -12,6 +12,7 @@ import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.Barcode;
 import service.*;
 import entity.*;
+import util.VeMapper;
 
 import java.awt.*;
 import java.awt.Image;
@@ -244,7 +245,7 @@ public class PrintPDF {
         int dem = 0;
         double tong = 0;
         for(ChiTietHoaDon cthd : dscthd){
-            Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+            Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
             LoaiVe loaiVe = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
             LichTrinh lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
             ChiTietLichTrinh ctlt = ctLichTrinhService.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());
@@ -436,7 +437,7 @@ public class PrintPDF {
         double tongTienTra = 0;
 
         for (ChiTietHoaDon cthd : dscthd) {
-            Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+            Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
             LoaiVe loaiVe = loaiVeService.getLoaiVeTheoMa(ve.getLoaiVe().getMaLoaiVe());
             LichTrinh lt = lichTrinhService.getLichTrinhTheoID(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh());
             ChiTietLichTrinh ctlt = ctLichTrinhService.getCTLTTheoCN(ve.getChiTietLichTrinh().getLichTrinh().getMaLichTrinh(), ve.getChiTietLichTrinh().getChoNgoi().getMaCho());

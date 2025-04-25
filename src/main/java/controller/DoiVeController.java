@@ -34,6 +34,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import lombok.Generated;
 import service.*;
+import util.VeMapper;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -260,14 +261,14 @@ public class DoiVeController implements Initializable {
             List<Ve> listVe = new ArrayList<>();
             if (cb_search.getValue().equalsIgnoreCase("Mã khách hàng")) {
                 try {
-                    listVe = veService.getDSVeTheoMaKH(search);
+                    listVe = VeMapper.toEntityList(veService.getDSVeTheoMaKH(search));
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
             } else if (cb_search.getValue().equalsIgnoreCase("Mã vé")) {
                 Ve ve = null;
                 try {
-                    ve = veService.getVeTheoID(search);
+                    ve = VeMapper.toEntity(veService.getVeTheoID(search));
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -279,7 +280,7 @@ public class DoiVeController implements Initializable {
                 try {
                     cthdService.getCT_HoaDon(search).forEach(cthd -> {
                         try {
-                            finalListVe.add(veService.getVeTheoID(cthd.getVe().getMaVe()));
+                            finalListVe.add(VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe())));
                         } catch (RemoteException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -546,7 +547,7 @@ public class DoiVeController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -567,7 +568,7 @@ public class DoiVeController implements Initializable {
         col_loaiCho.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -592,7 +593,7 @@ public class DoiVeController implements Initializable {
         col_tinhTrangVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -603,7 +604,7 @@ public class DoiVeController implements Initializable {
         col_loaiVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }

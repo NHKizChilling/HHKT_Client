@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import lombok.SneakyThrows;
 import service.*;
+import util.VeMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -535,7 +536,7 @@ public class HoaDonController implements Initializable {
                     ArrayList<ChiTietHoaDon> listcthd_new = new ArrayList<>();
                     for (Ve ve : dsve) {
                         ctltService.updateCTLT(ve.getChiTietLichTrinh(), false);
-                        veService.create(ve);
+                        veService.create(VeMapper.toDTO(ve));
                         ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve);
                         cthd.tinhGiaVe();
                         cthd.tinhGiaGiam();
@@ -616,7 +617,7 @@ public class HoaDonController implements Initializable {
                         ArrayList<ChiTietHoaDon> listcthd_new = new ArrayList<>();
                         for (Ve ve : dsve) {
                             ctltService.updateCTLT(ve.getChiTietLichTrinh(), false);
-                            veService.create(ve);
+                            veService.create(VeMapper.toDTO(ve));
                             ChiTietHoaDon cthd = new ChiTietHoaDon(hd, ve);
                             cthd.tinhGiaVe();
                             cthd.tinhGiaGiam();

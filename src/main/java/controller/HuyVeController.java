@@ -25,6 +25,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import service.*;
+import util.VeMapper;
 
 import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
@@ -215,7 +216,7 @@ public class HuyVeController implements Initializable {
             if (cb_search.getValue().equals("Mã vé")) {
                 Ve ve = null;
                 try {
-                    ve = veService.getVeTheoID(key);
+                    ve = VeMapper.toEntity(veService.getVeTheoID(key));
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -255,7 +256,7 @@ public class HuyVeController implements Initializable {
                     for (ChiTietHoaDon ct : listCTHD) {
                         Ve ve = null;
                         try {
-                            ve = veService.getVeTheoID(ct.getVe().getMaVe());
+                            ve = VeMapper.toEntity(veService.getVeTheoID(ct.getVe().getMaVe()));
                         } catch (RemoteException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -309,7 +310,7 @@ public class HuyVeController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -545,7 +546,7 @@ public class HuyVeController implements Initializable {
         col_thongTinVe.setCellValueFactory(p -> {
             Ve ve = null;
             try {
-                ve = veService.getVeTheoID(p.getValue().getMaVe());
+                ve = VeMapper.toEntity(veService.getVeTheoID(p.getValue().getMaVe()));
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }

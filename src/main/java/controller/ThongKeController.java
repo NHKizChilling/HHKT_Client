@@ -25,6 +25,7 @@ import service.CT_HoaDonService;
 import service.CT_LichTrinhService;
 import service.HoaDonService;
 import service.VeService;
+import util.VeMapper;
 
 import java.awt.*;
 import java.io.File;
@@ -300,7 +301,7 @@ public class ThongKeController implements Initializable {
             // Lấy chi tiết hóa đơn theo mã hóa đơn
             for (ChiTietHoaDon cthd : ctHoaDonService.getCT_HoaDon(hoaDon.getMaHD())) {
                 // Lấy vé theo mã vé
-                Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                 // Lấy tình trạng vé và cập nhật số vé bán, trả, đổi
                 switch (ve.getTinhTrangVe()) {
                     case "DaBan" -> soVeBan++;
@@ -333,7 +334,7 @@ public class ThongKeController implements Initializable {
             String maHoaDon = hoaDon.getMaHD();
             for (ChiTietHoaDon cthd : ctHoaDonService.getCT_HoaDon(maHoaDon)) {
                 // Tính tổng vé bán
-                Ve ve = veService.getVeTheoID(cthd.getVe().getMaVe());
+                Ve ve = VeMapper.toEntity(veService.getVeTheoID(cthd.getVe().getMaVe()));
                 if (ve.getTinhTrangVe().equals("DaBan") || ve.getTinhTrangVe().equals("DaDoi")) {
                     tongVeBan++;
                 }
