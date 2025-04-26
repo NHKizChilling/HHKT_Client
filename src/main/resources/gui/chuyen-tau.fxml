@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="755.0" prefWidth="1384.0" style="-fx-background-color: #fff;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LichTrinhController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="755.0" prefWidth="1384.0" style="-fx-background-color: #fff;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LichTrinhController">
    <children>
       <AnchorPane layoutX="15.0" layoutY="377.0" prefHeight="295.0" prefWidth="942.0" styleClass="shadow">
          <children>
@@ -152,12 +152,12 @@
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>
-            <DatePicker fx:id="datePicker_tgDKDen" layoutX="94.0" layoutY="400.0" prefHeight="35.0" prefWidth="182.0" style="-fx-background-color: #fff; -fx-border-color: #333; -fx-border-radius: 5;">
+            <DatePicker fx:id="datePicker_tgDKDen" disable="true" editable="false" layoutX="94.0" layoutY="400.0" prefHeight="35.0" prefWidth="182.0" style="-fx-background-color: #fff; -fx-border-color: #333; -fx-border-radius: 5;">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor>
             </DatePicker>
-            <TextField fx:id="infoGioDen" alignment="CENTER" layoutX="288.0" layoutY="405.0" prefHeight="25.0" prefWidth="37.0" promptText="00">
+            <TextField fx:id="infoGioDen" alignment="CENTER" disable="true" editable="false" layoutX="288.0" layoutY="405.0" prefHeight="25.0" prefWidth="37.0" promptText="00">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>
@@ -166,7 +166,7 @@
                   <Font size="14.0" />
                </font>
             </Label>
-            <TextField fx:id="infoPhutDen" alignment="CENTER" layoutX="337.0" layoutY="405.0" prefHeight="25.0" prefWidth="37.0" promptText="00">
+            <TextField fx:id="infoPhutDen" alignment="CENTER" disable="true" editable="false" layoutX="337.0" layoutY="405.0" prefHeight="25.0" prefWidth="37.0" promptText="00">
                <cursor>
                   <Cursor fx:constant="TEXT" />
                </cursor></TextField>

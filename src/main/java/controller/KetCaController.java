@@ -136,7 +136,19 @@ public class KetCaController implements Initializable {
             if (!checkInput()) {
                 return;
             }
+            LocalDateTime gioKetCa = LocalDateTime.now();
             closeWindow();
+            getData.caLamViec.setGhiChu(ghiChu);
+            getData.caLamViec.setGioKetCa(gioKetCa);
+            getData.caLamViec.setTienKetCa(tongTien);
+            getData.caLamViec.setTrangThaiCa(false);
+
+            try {
+                caLamViecService.update(getData.caLamViec);
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            getData.caLamViec = null;
         });
 
         btn_inPhieu.setOnAction(event -> {
