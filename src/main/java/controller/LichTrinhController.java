@@ -194,7 +194,7 @@ public class LichTrinhController implements Initializable {
             if (lichTrinh != null) {
                 btn_add.setDisable(true);
                 txt_maLichTrinh.setText(lichTrinh.getMaLichTrinh());
-                cb_soHieuTau.setValue(String.valueOf(lichTrinh.getSoHieuTau()));
+                cb_soHieuTau.setValue(String.valueOf(lichTrinh.getSoHieuTau().getSoHieuTau()));
                 try {
                     cb_infoGaDi.setValue(gaService.getGaTheoMaGa(lichTrinh.getGaDi().getMaGa()).getTenGa());
                 } catch (RemoteException ex) {

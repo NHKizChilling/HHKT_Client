@@ -365,8 +365,8 @@ public class NhanVienController implements Initializable {
 
     public void renderNhanVienTable(ArrayList<NhanVien> list) {
         ObservableList<NhanVien> listNhanVien = FXCollections.observableList(list);
-        col_maNV.setCellValueFactory(new PropertyValueFactory<>("maNhanVien"));
-        col_tenNV.setCellValueFactory(new PropertyValueFactory<>("tenNhanVien"));
+        col_maNV.setCellValueFactory(new PropertyValueFactory<>("maNV"));
+        col_tenNV.setCellValueFactory(new PropertyValueFactory<>("tenNV"));
         col_gioiTinh.setCellValueFactory(cellData -> {
             boolean gioiTinh = cellData.getValue().isGioiTinh();
             return new SimpleStringProperty(gioiTinh ? "Nữ" : "Nam");
@@ -375,7 +375,7 @@ public class NhanVienController implements Initializable {
         col_cccd.setCellValueFactory(new PropertyValueFactory<>("soCCCD"));
         col_sdt.setCellValueFactory(new PropertyValueFactory<>("sdt"));
         col_chucVu.setCellValueFactory(new PropertyValueFactory<>("chucVu"));
-        col_tinhTrang.setCellValueFactory(new PropertyValueFactory<>("tinhTrangCV"));
+        col_tinhTrang.setCellValueFactory(new PropertyValueFactory<>("tinhTrangCv"));
         tbl_nhanVien.setItems(listNhanVien);
     }
 }
