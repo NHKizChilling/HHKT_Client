@@ -484,7 +484,7 @@ public class ThongKeController implements Initializable {
         cellTongCongValue.setCellValue(sum);
         cellTongCongValue.setCellStyle(style2);
 
-        try (FileOutputStream fileOut = new FileOutputStream("ThongKeDoanhThu.xlsx")) {
+        try (FileOutputStream fileOut = new FileOutputStream("src/main/resources/pdf/ThongKeDoanhThu.xlsx")) {
             workbook.write(fileOut);
             workbook.close();
         } catch (IOException e) {
@@ -492,7 +492,7 @@ public class ThongKeController implements Initializable {
         }
 
         try {
-            File file = new File("ThongKeDoanhThu.xlsx");
+            File file = new File("src/main/resources/pdf/ThongKeDoanhThu.xlsx");
             if (file.exists()) {
                 Desktop.getDesktop().open(file);
             }

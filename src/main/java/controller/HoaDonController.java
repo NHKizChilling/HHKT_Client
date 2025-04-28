@@ -116,8 +116,7 @@ public class HoaDonController implements Initializable {
     private TextField txtTienKH;
     @FXML
     private TextField txtTienTra;
-    @FXML
-    private JFXButton btnInHD;
+
     @FXML
     private JFXButton btnLuuTamHD;
     @FXML
@@ -344,30 +343,19 @@ public class HoaDonController implements Initializable {
                             Alert alert = new Alert(Alert.AlertType.INFORMATION);
                             alert.setTitle("Thông báo");
                             alert.setHeaderText("Thanh toán thành công");
-                            btnInHD.setDisable(false);
                             btnThanhToan.setDisable(true);
                             btnLuuTamHD.setDisable(true);
                             alert.showAndWait();
                         }
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 }
             });
 
-            btnInHD.setOnAction(event -> {
-                PrintPDF printPDF = new PrintPDF();
-                try {
-                    printPDF.inHoaDon(getData.hd);
-                    printPDF.inVe(dsve);
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Thông báo");
-                    alert.setHeaderText("In hóa đơn thành công");
-                    alert.show();
-                } catch (IOException | DocumentException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+
             return;
         }
         cbLoaiVe.setValue(cbLoaiVe.getItems().getFirst());
@@ -630,7 +618,9 @@ public class HoaDonController implements Initializable {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Thông báo");
                         alert.setHeaderText("Thanh toán thành công");
-                        btnInHD.setDisable(false);
+                        PrintPDF printPDF = new PrintPDF();
+                        printPDF.inHoaDon(getData.hd);
+                        printPDF.inVe(dsve);
                         btnThanhToan.setDisable(true);
                         btnLuuTamHD.setDisable(true);
                         alert.showAndWait();
@@ -638,23 +628,14 @@ public class HoaDonController implements Initializable {
                     }
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
+                } catch (DocumentException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
 
-        btnInHD.setOnAction(event -> {
-            PrintPDF printPDF = new PrintPDF();
-            try {
-                printPDF.inHoaDon(getData.hd);
-                printPDF.inVe(dsve);
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Thông báo");
-                alert.setHeaderText("In hóa đơn thành công");
-                alert.show();
-            } catch (IOException | DocumentException e) {
-                throw new RuntimeException(e);
-            }
-        });
 
         btnGia1.setOnAction(event -> {
             txtTienKH.setText(btnGia1.getText());

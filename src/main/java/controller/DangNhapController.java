@@ -30,6 +30,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 /*
  * @description:
@@ -154,11 +155,26 @@ public class DangNhapController {
                                         TrangChu_GUI.stage.show();
                                         TrangChu_GUI.stage.centerOnScreen();
                                     } else {
-                                        getData.caLamViec = tmp;
-                                        stg.close();
-                                        TrangChu_GUI.stage.setScene(scene2);
-                                        TrangChu_GUI.stage.show();
-                                        TrangChu_GUI.stage.centerOnScreen();
+                                        if (LocalDateTime.now().minusMinutes(480).isAfter(tmp.getGioMoCa())) {
+                                            tmp.setTrangThaiCa(false);
+                                            tmp.setGioKetCa(LocalDateTime.now());
+                                            tmp.setGhiChu("Nhân viên chưa kết ca");
+                                            try {
+                                                caLamViecService.update(tmp);
+                                            } catch (RemoteException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                            stg.close();
+                                            TrangChu_GUI.stage.setScene(scene);
+                                            TrangChu_GUI.stage.show();
+                                            TrangChu_GUI.stage.centerOnScreen();
+                                        } else {
+                                            getData.caLamViec = tmp;
+                                            stg.close();
+                                            TrangChu_GUI.stage.setScene(scene2);
+                                            TrangChu_GUI.stage.show();
+                                            TrangChu_GUI.stage.centerOnScreen();
+                                        }
                                     }
                                 }
                             });

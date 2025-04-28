@@ -43,10 +43,7 @@ public class HDDoiTraVeController implements Initializable {
     private Button btnGia3;
 
     @FXML
-    private Button btnGia4;
-
-    @FXML
-    private JFXButton btnInHD;
+    private Button btnGia4;;
 
     @FXML
     private JFXButton btnThanhToan;
@@ -324,24 +321,20 @@ public class HDDoiTraVeController implements Initializable {
                         alert.setTitle("Thông báo");
                         alert.setHeaderText("Thanh toán thành công");
                         btnThanhToan.setDisable(true);
-                        btnInHD.setDisable(false);
                         alert.showAndWait();
+
+                        PrintPDF printPDF = new PrintPDF();
+                        printPDF.inHoaDon(getData.hd);
+                        ArrayList<Ve> list = getData.dsve;
+                        printPDF.inVe(list);
                     }
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
+                } catch (DocumentException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-            }
-        });
-
-        btnInHD.setOnAction(event -> {
-            PrintPDF printPDF = new PrintPDF();
-            try {
-                printPDF.inHoaDon(getData.hd);
-                ArrayList<Ve> list = getData.dsve;
-                printPDF.inVe(list);
-
-            } catch (IOException | DocumentException e) {
-                throw new RuntimeException(e);
             }
         });
 

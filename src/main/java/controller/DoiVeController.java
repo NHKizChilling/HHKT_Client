@@ -514,13 +514,6 @@ public class DoiVeController implements Initializable {
                     } catch (RemoteException ex) {
                         throw new RuntimeException(ex);
                     }
-                    if (!hoaDon.isTrangThai()) {
-                        try {
-                            hdService.delete(hoaDon);
-                        } catch (RemoteException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
                     getData.hd = null;
                     getData.dsctlt = null;
                     getData.dsctltkh = null;

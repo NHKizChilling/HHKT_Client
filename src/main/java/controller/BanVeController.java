@@ -776,7 +776,7 @@ public class BanVeController implements Initializable {
 
                 Button btnBack = (Button) acpHoaDon.lookup("#btnBackBanVe");
                 btnBack.setOnMouseClicked(e1 -> {
-                    HoaDon hoaDon = null;
+                    HoaDon hoaDon;
                     try {
                         hoaDon = hoaDonService.getHoaDonVuaTao();
                     } catch (RemoteException ex) {
