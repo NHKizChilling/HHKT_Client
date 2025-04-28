@@ -280,7 +280,7 @@ public class BanVeController implements Initializable {
 
         ArrayList<LichTrinh> temp = null;
         try {
-            temp = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13));
+            temp = (ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.now());
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
@@ -860,7 +860,7 @@ public class BanVeController implements Initializable {
         btnChonCD.setDisable(true);
         btnChonKH.setDisable(false);
         btnXoaAllCN.setDisable(true);
-        showTauTheoLT((ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.of(2024, 12, 13)));
+        showTauTheoLT((ArrayList<LichTrinh>) lichTrinhService.traCuuDSLichTrinhTheoNgay(LocalDate.now()));
         cbGaDi.setValue(null);
         cbGaDi.requestFocus();
         cbGaDen.setValue(null);
