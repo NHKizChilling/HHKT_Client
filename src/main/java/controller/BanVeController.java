@@ -782,11 +782,13 @@ public class BanVeController implements Initializable {
                     } catch (RemoteException ex) {
                         throw new RuntimeException(ex);
                     }
-                    if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
-                        try {
-                            hoaDonService.delete(hoaDon);
-                        } catch (RemoteException ex) {
-                            throw new RuntimeException(ex);
+                    if (hoaDon != null) {
+                        if (!hoaDon.isTrangThai() && hoaDon.getTongTien() == 0) {
+                            try {
+                                hoaDonService.delete(hoaDon);
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                     } else {
                         try {
